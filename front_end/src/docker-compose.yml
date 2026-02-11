@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  php:
+    image: php:8.2-apache
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www/html
+    command: >
+      bash -c "a2enmod rewrite && apache2-foreground"
