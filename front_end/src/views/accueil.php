@@ -21,33 +21,37 @@
         
         <!-- Section 1 -->
         <section class="section">
-            <h2>Titre de la première section</h2>
+            <h2>Les chiffres-clés du risque inondation en France</h2>
             <p>
-                blabla
+                <ul>
+                <li>17,1 millions d'habitants permanents exposés aux différentes conséquences des inondations par débordement de cours d’eau, dont 16,8 millions en métropole.</li>
+                <li>1,4 million d’habitants exposés au risque de submersion marine.</li>
+                <li>Plus de 9 millions d’emplois exposés aux débordements de cours d’eau et plus de 850 000 emplois exposés aux submersions marines.</li>
+                <li>20% des habitations exposées aux submersions marines sont de plain-pied.</li>
+                </ul>
             </p>
             <!-- Emplacement pour image -->
             <div class="image-container">
                 <img src="../assets/img/barrage_emosson.jpg" alt="barrage Emosson"> 
             </div>
-            <p>
-                blabla
-            </p>
+            
             
             
         </section>
 
         <!-- Section 2 -->
         <section class="section">
-            <h2>Titre de la deuxième section</h2>
+            <h2>A quoi sert notre auto diagnostic ?</h2>
             <p>
-                blabla
+                 Fournir un score de vulnérabilité qui vulgarise, pour chaque personne qui le souhaite, le niveau d'exposition de son logement au risque inondation. 
+                 Inciter chacun à adopter une culture du risque, à prendre les mesures adéquates pour protéger les occupants du logement ainsi que le bâti lui-même. 
             </p>
             <!-- Emplacement pour image -->
             <div class="image-container">
                 <img src="../assets/img/inondation_img1.jpg" alt="barrage Emosson">
             </div>
             <p>
-                blabla
+                Comment réaliser son auto-diagnostic ? Rien de plus simple, clique simplement sur le bouton d'accès au questionnaire en haut de page et répond au questionnaire !
             </p>
             
             
@@ -55,7 +59,7 @@
 
         <!-- Section 3 -->
         <section class="section">
-            <h2>Titre de la troisième section</h2>
+            <h2>Actualité</h2>
             <p>
                 blabla
             </p>
