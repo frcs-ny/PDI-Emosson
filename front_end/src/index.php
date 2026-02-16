@@ -19,6 +19,9 @@ Flight::route('/questionnaire', function() {
     Flight::render('questionnaire');
 });
 
+Flight::route('/calcul', function() {
+    Flight::render('calcul');
+});
 
 
 Flight::start();
