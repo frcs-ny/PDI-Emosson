@@ -1,0 +1,3 @@
+Bravo tu as lu un truc où il y a écrit ne me le pas, t'es sacrement bilingue toi ! 
+
+bref en gros dans l'inex il y a un bouton qui execute la fonction checkPPRI(lon, lat) (le async jsp d'où il sort mais sinon ca marche pas donc on va bien le laisser) le reste du html c'est pour faire une carte et faire la projection de WSG84 a lambert. Hauteur max = null c'est normal juste il n'y en a pas. Sans donnée on ne va pas aller bien loin mdr j'ai juste mis le fichier en geojson tu changera le chemin ligne 12 et c'est tout je crois tu copie colle rien besoin de plus et en vrai rajoute la carte lors du résultat ça peut etre cool.
