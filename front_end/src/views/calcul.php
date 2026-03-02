@@ -1,67 +1,73 @@
 <?php
-// Initialisation
 $score_total = 0;
 $details = [];
+$niveau_plancher = 0;
+$zone_choisie_texte = '';
 
-// On vérifie si le formulaire a été soumis
-if (isset($_GET['zone_aleas'])) {
-
-    // --- 1. CRITÈRE : ZONE INONDABLE ---
-    $zone = $_GET['zone_aleas'];
+// On s'assure que Flight a bien passé les données de la base
+if (isset($questions_db)) {
     
-    // Tableau des scores selon l'image (colonne "Score de vulnérabilité")
-    $scores_zone = [
-        "ZDE" => 140,
-        "EP"  => 140,
-        "M"   => 80,
-        "F"   => 110,
-        "TF"  => 140
-    ];
+    // 1. On boucle sur toutes les questions de la base
+    foreach ($questions_db as $q) {
+        $id = $q['id'];
+        $critere = $q['critere'];
+        $reponses = json_decode($q['reponses_json'], true);
+        $scores = json_decode($q['scores_json'], true);
 
-    // On ajoute le score de la zone
-    if (array_key_exists($zone, $scores_zone)) {
-        $score_zone = $scores_zone[$zone];
-        $score_total += $score_zone;
-        $details[] = "Zone $zone : +$score_zone points";
-    }
+        // Si l'utilisateur a répondu à cette question précise
+        if (isset($_GET["rep_$id"])) {
+            $user_answer = $_GET["rep_$id"];
 
-    // --- 2. CRITÈRE : TRAVAUX ---
-    // L'image indique 0 point pour Oui ou Non, donc on ne change pas le score
-    // Mais on récupère l'info si besoin pour plus tard.
-    $travaux = $_GET['travaux_recents'];
+            // Cas A : C'est le niveau du plancher ("x")
+            if (count($reponses) === 1 && $reponses[0] === 'x') {
+                $niveau_plancher = (float) $user_answer;
+                $details[] = "$critere : $niveau_plancher m";
+            } 
+            // Cas B : C'est une liste déroulante (Zone inondable, Travaux...)
+            else {
+                $index = (int) $user_answer;
+                $texte_reponse = $reponses[$index];
+                $score_obtenu = (float) $scores[$index];
+                
+                $score_total += $score_obtenu;
+                $details[] = "$critere ($texte_reponse) : $score_obtenu points";
 
+                // On sauvegarde le nom de la zone pour le calcul H
+                if ($critere === 'Zone inondable') {
+                    $zone_choisie_texte = $texte_reponse;
+                }
+            }
+        }
+        
+        // 2. Traitement automatique du "Calcul H" (qui n'était pas dans le formulaire)
+        if ($critere === "Hauteur d'eau potentielle" && $zone_choisie_texte !== '') {
+            
+            // Dictionnaire des hauteurs de référence (À ADAPTER AVEC VOS VRAIES VALEURS)
+            $hauteurs_reference = [
+                "Zone de dissipation de l'énergie (ZDE)" => 1.5,
+                "Ecoulement préférentiel (EP)"           => 1.2,
+                "Modéré (M)"                             => 0.5,
+                "Fort (F)"                               => 1.0,
+                "Très fort (TF)"                         => 2.0
+            ];
 
-    // --- 3. CRITÈRE : HAUTEUR D'EAU POTENTIELLE (Calcul H) ---
-    // Formule : H = niveau d'inondation (zone) - niveau du premier plancher
-    
-    $niveau_plancher = (float) $_GET['niveau_plancher']; // La réponse de l'utilisateur
+            $niveau_inondation = $hauteurs_reference[$zone_choisie_texte] ?? 0;
+            $H = $niveau_inondation - $niveau_plancher;
 
-    // IMPORTANT : L'image dit "niveau d'inondation donné dans la zone".
-    // Comme ces chiffres ne sont pas visibles sur l'image, j'ai mis 0.0 par défaut.
-    // VOUS DEVEZ REMPLACER CES 0.0 PAR LES VRAIES HAUTEURS D'EAU DE VOS ZONES.
-    $hauteurs_reference_zone = [
-        "ZDE" => 1.5,  // Exemple : 1.50m
-        "EP"  => 1.2,
-        "M"   => 0.5,
-        "F"   => 1.0,
-        "TF"  => 2.0
-    ];
+            // On cherche la règle correspondante dans la base de données (h >= 0.2 ou h <= 0.2)
+            if ($H >= 0.2) {
+                $idx_regle = array_search('h >= 0.2', $reponses);
+            } else {
+                $idx_regle = array_search('h <= 0.2', $reponses);
+            }
 
-    // On récupère la hauteur d'eau de référence pour la zone choisie
-    $niveau_inondation = $hauteurs_reference_zone[$zone] ?? 0;
-
-    // Calcul de H
-    $H = $niveau_inondation - $niveau_plancher;
-
-    // Application de la règle du tableau
-    // Si H >= 0,2 m -> -20 points (bonus de sécurité car plancher bas ?) 
-    // Note: Le tableau dit -20, ce qui réduit la vulnérabilité
-    if ($H >= 0.2) {
-        $score_total -= 20;
-        $details[] = "Hauteur différentielle ($H m) >= 0.2m : -20 points";
-    } else {
-        // Sinon 0
-        $details[] = "Hauteur différentielle ($H m) < 0.2m : 0 point";
+            // Si on trouve la règle dans la base, on applique son score
+            if ($idx_regle !== false) {
+                $score_calc = (float) $scores[$idx_regle];
+                $score_total += $score_calc;
+                $details[] = "Hauteur d'eau H ($H m) : $score_calc points";
+            }
+        }
     }
 }
 ?>
@@ -86,7 +92,7 @@ if (isset($_GET['zone_aleas'])) {
             <h3>Détails du calcul :</h3>
             <ul>
                 <?php foreach($details as $msg): ?>
-                    <li><?php echo $msg; ?></li>
+                    <li><?php echo htmlspecialchars($msg); ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>
