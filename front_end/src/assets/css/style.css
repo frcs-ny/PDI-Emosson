@@ -306,10 +306,6 @@ form input[type="number"] {
     color: #333;
     transition: all 0.3s ease;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-
-    /* Masque les flèches natives du navigateur */
-    appearance: none;
-    -moz-appearance: textfield;
 }
 
 form input[type="number"]::-webkit-outer-spin-button,
