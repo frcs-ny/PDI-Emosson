@@ -66,76 +66,52 @@ function est_dans_une_zone_inondable(float $lat, float $lon, int $page = 1, int 
     // Initialisation des résultats pour chaque référentiel
     // found   : true si un risque d'inondation est détecté
     // risques : liste des libellés des risques trouvés
-    $results = [
-        'TRI'  => ['found' => false, 'risques' => []],
-        'AZI'  => ['found' => false, 'risques' => []],
-        'PAPI' => ['found' => false, 'risques' => []],
-    ];
+    $result = ['found' => false, 'risques' => []];
 
-    // On boucle sur chaque URL (TRI, AZI, PAPI)
-    foreach ($urls as $type => $base_url) {
+    $url = $urls['TRI'] . '?' . http_build_query($params);
 
-        // Construction de l'URL complète avec les paramètres
-        // ex: https://georisques.gouv.fr/api/v1/gaspar/tri?rayon=1000&latlon=0.657551,47.388068&...
-        $url = $base_url . '?' . http_build_query($params);
+    $response = file_get_contents($url);
+    if ($response === false) {
+        die("Erreur lors de l'appel à l'API : TRI");
+    }
 
-        // Appel à l'API et récupération de la réponse JSON brute
-        $response = file_get_contents($url);
-        if ($response === false) {
-            die("Erreur lors de l'appel à l'API : $type");
-        }
+    $data = json_decode($response, true);
 
-        // Conversion du JSON en tableau PHP associatif
-        $data = json_decode($response, true);
+    foreach ($data['data'] as $elt_data) {
+        foreach ($elt_data['liste_libelle_risque'] as $risque) {
 
-        // On parcourt chaque élément retourné par l'API
-        foreach ($data['data'] as $elt_data) {
+            $num = (string) $risque['num_risque'];
 
-            // Chaque élément contient une liste de risques associés
-            foreach ($elt_data['liste_libelle_risque'] as $risque) {
-
-                $num = (string) $risque['num_risque'];
-
-                // Les codes risque commençant par '11' = inondation
-                // Les codes risque commençant par '23' = rupture de barrage
-                if (str_starts_with($num, '11') || str_starts_with($num, '23')) {
-                    $results[$type]['found'] = true;
-                    $results[$type]['risques'][] = $risque['libelle_risque_long'];
-                }
+            if (str_starts_with($num, '11') || str_starts_with($num, '23')) {
+                $result['found'] = true;
+                $result['risques'][] = $risque['libelle_risque_long'];
             }
         }
     }
 
-    return [$results['TRI'], $results['AZI'], $results['PAPI']];
+    return $result;
 }
 
+// Comment l'utiliser
 
 $adresse = "10 Rue de la République, 37000 Tours";
-// $adresse = "Route du Col de la Croix de Fer, 73530 Saint-Sorlin-d'Arves"; autre essaie
 
 $coords = récupérer_coordonnees($adresse);
 
-if ($coords) {
-} else {
-    echo "Adresse introuvable";
+if (!$coords) {
+    die("Adresse introuvable");
 }
 
 $lat = $coords['lat'];
 $lon = $coords['lon'];
 
-// Appel de la fonction, résultats récupérés dans 3 variables distinctes
-[$res_TRI, $res_AZI, $res_PAPI] = est_dans_une_zone_inondable($lat, $lon);
+$res_TRI = est_dans_une_zone_inondable($lat, $lon);
 
-// Affichage des résultats pour chaque référentiel
-foreach (['TRI' => $res_TRI, 'AZI' => $res_AZI, 'PAPI' => $res_PAPI] as $nom => $res) {
-    if ($res['found']) {
-        // array_unique évite les doublons, implode les sépare par des virgules
-        echo "$nom : " . implode(', ', array_unique($res['risques'])) . "<br>";
-    } else {
-        echo "$nom : aucun risque<br>";
-    }
+if ($res_TRI['found']) {
+    echo "TRI : " . implode(', ', array_unique($res_TRI['risques'])) . "<br>";
+} else {
+    echo "TRI : aucun risque<br>";
 }
-
 
 
 
