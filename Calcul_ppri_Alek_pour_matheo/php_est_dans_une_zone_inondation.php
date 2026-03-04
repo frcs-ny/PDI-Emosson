@@ -1,5 +1,36 @@
 <?php
 
+// Récupération coordonnée a partir de l'adresse
+
+function récupérer_coordonnees(string $adresse): ?array {
+
+    // Encodage de l'adresse pour l'intégrer dans une URL
+    $params = http_build_query(['q' => $adresse, 'limit' => 1]);
+    $url = "https://api-adresse.data.gouv.fr/search/?$params";
+
+    $response = file_get_contents($url);
+    if ($response === false) {
+        die("Erreur lors de l'appel à l'API BAN");
+    }
+
+    $data = json_decode($response, true);
+
+    // Vérifie qu'on a bien au moins un résultat
+    if (empty($data['features'])) {
+        return null;
+    }
+
+    // Les coordonnées sont au format [longitude, latitude]
+    $coords = $data['features'][0]['geometry']['coordinates'];
+
+    return [
+        'lat' => $coords[1],
+        'lon' => $coords[0],
+    ];
+}
+
+
+
 /**
  * Vérifie si des coordonnées GPS se trouvent dans une zone inondable
  * en interrogeant l'API Géorisques sur 3 référentiels :
@@ -26,7 +57,7 @@ function est_dans_une_zone_inondable(float $lat, float $lon, int $page = 1, int 
     // - rayon  : zone de recherche autour du point (en mètres)
     // - latlon : coordonnées GPS au format "longitude,latitude"
     $params = [
-        "rayon"     => 1000,
+        "rayon"     => 100,
         "latlon"    => "$lon,$lat",
         "page"      => $page,
         "page_size" => $page_size,
@@ -78,9 +109,19 @@ function est_dans_une_zone_inondable(float $lat, float $lon, int $page = 1, int 
     return [$results['TRI'], $results['AZI'], $results['PAPI']];
 }
 
-// Coordonnées GPS du point à analyser (ici : Tours, Indre-et-Loire)
-$lat = 47.388068;
-$lon = 0.657551;
+
+$adresse = "10 Rue de la République, 37000 Tours";
+// $adresse = "Route du Col de la Croix de Fer, 73530 Saint-Sorlin-d'Arves"; autre essaie
+
+$coords = récupérer_coordonnees($adresse);
+
+if ($coords) {
+} else {
+    echo "Adresse introuvable";
+}
+
+$lat = $coords['lat'];
+$lon = $coords['lon'];
 
 // Appel de la fonction, résultats récupérés dans 3 variables distinctes
 [$res_TRI, $res_AZI, $res_PAPI] = est_dans_une_zone_inondable($lat, $lon);
@@ -94,3 +135,7 @@ foreach (['TRI' => $res_TRI, 'AZI' => $res_AZI, 'PAPI' => $res_PAPI] as $nom => 
         echo "$nom : aucun risque<br>";
     }
 }
+
+
+
+
