@@ -41,8 +41,8 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
 
 -- Murs
 ('Murs', 'Vos murs sont-ils faits en bois ?', 
- ARRAY['Oui + H > 1', 'Oui + H < 1', 'Non'], 
- ARRAY[7.5, 7.5, 0]),
+ ARRAY['Oui', 'Non'], 
+ ARRAY[7.5, 0]),
 
 -- Isolant
 ('Isolant', 'Quel matériau d''isolation est utilisé dans votre logement ?', 

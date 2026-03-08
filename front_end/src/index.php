@@ -12,7 +12,7 @@ if (!$link) {
     die("Erreur de connexion à la base de données PostgreSQL.");
 }
 
-// On stocke la connexion dans Flight sous le nom 'bd' (comme vous l'avez demandé)
+// On stocke la connexion dans Flight sous le nom 'bd'
 Flight::set('bd', $link);
 
 Flight::route('/', function() {
@@ -27,36 +27,41 @@ Flight::route('/PPRI', function() {
     Flight::render('PPRI');
 });
 
-// --- ROUTE QUESTIONNAIRE : Adaptée pour pg_query ---
+// --- ROUTE QUESTIONNAIRE : Interroge les 2 tables ---
 Flight::route('/questionnaire', function() {
-    // On récupère la connexion stockée
     $db = Flight::get('bd'); 
     
-    // On exécute la requête avec la fonction native
-    $result = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.zone_inondable ORDER BY id");
+    // Table 1 : Zone Inondable
+    $res1 = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.zone_inondable ORDER BY id");
+    $questions_zone = $res1 ? pg_fetch_all($res1) : [];
     
-    // On transforme le résultat en tableau associatif
-    $questions = [];
-    if ($result) {
-        $questions = pg_fetch_all($result);
-    }
+    // Table 2 : Questions Logement
+    $res2 = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.questions_logement ORDER BY id");
+    $questions_logement = $res2 ? pg_fetch_all($res2) : [];
     
-    // On passe la variable à la vue
-    Flight::render('questionnaire', ['questions' => $questions]);
+    // On passe les deux variables à la vue
+    Flight::render('questionnaire', [
+        'questions_zone' => $questions_zone,
+        'questions_logement' => $questions_logement
+    ]);
 });
 
-// --- ROUTE CALCUL : Adaptée pour pg_query ---
+// --- ROUTE CALCUL : Interroge les 2 tables ---
 Flight::route('/calcul', function() {
     $db = Flight::get('bd');
     
-    $result = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.zone_inondable ORDER BY id");
+    // Table 1 : Zone Inondable
+    $res1 = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.zone_inondable ORDER BY id");
+    $questions_zone_db = $res1 ? pg_fetch_all($res1) : [];
     
-    $questions_db = [];
-    if ($result) {
-        $questions_db = pg_fetch_all($result);
-    }
+    // Table 2 : Questions Logement
+    $res2 = pg_query($db, "SELECT id, critere, question, array_to_json(reponses) AS reponses_json, array_to_json(scores_vulnerabilite) AS scores_json FROM public.questions_logement ORDER BY id");
+    $questions_logement_db = $res2 ? pg_fetch_all($res2) : [];
     
-    Flight::render('calcul', ['questions_db' => $questions_db]);
+    Flight::render('calcul', [
+        'questions_zone_db' => $questions_zone_db,
+        'questions_logement_db' => $questions_logement_db
+    ]);
 });
 
 Flight::start();

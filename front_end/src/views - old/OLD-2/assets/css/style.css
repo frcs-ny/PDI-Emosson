@@ -4,19 +4,10 @@
     box-sizing: border-box;
 }
 
-/* --- FIX FOOTER RENFORCÉ : Étape 1 --- */
-html, body {
-    height: 100%;
-}
-
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     line-height: 1.6;
-    /* Transformation du body en colonne flexible */
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh; 
 }
 
 /* Bandeau d'en-tête */
@@ -63,24 +54,11 @@ header h1 {
     background: #f0f0f0;
 }
 
-/* Boutons désactivés (Précédent / Suivant) */
-.btn:disabled, form button[type="submit"]:disabled {
-    background: #cccccc;
-    color: #666;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-    border: none;
-}
-
-/* --- FIX FOOTER RENFORCÉ : Étape 2 --- */
+/* Contenu principal */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
-    width: 100%;
-    /* Le container prend tout l'espace libre pour pousser le footer vers le bas */
-    flex: 1; 
 }
 
 /* Sections de contenu */
@@ -153,15 +131,13 @@ header img {
     height: 250px;
 }
 
-/* --- FIX FOOTER RENFORCÉ : Étape 3 --- */
+/* Footer */
 footer {
     background: #333;
     color: white;
     text-align: center;
     padding: 20px 0;
-    width: 100%;
-    /* margin-top: auto s'assure qu'il reste collé en bas */
-    margin-top: auto; 
+    margin-top: 60px;
 }
 
 /* Formulaire */
@@ -197,6 +173,7 @@ form select {
     transition: all 0.3s ease;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     appearance: none;
+    
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 20px;
@@ -209,37 +186,6 @@ form select:hover {
 }
 
 form select:focus {
-    outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-/* Nouveaux styles pour les inputs text et number */
-form input[type="number"], form input[type="text"] {
-    width: 100%;
-    padding: 14px 18px;
-    font-size: 1rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 10px;
-    background: #fafafa;
-    color: #333;
-    transition: all 0.3s ease;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-form input[type="number"]::-webkit-outer-spin-button,
-form input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-form input[type="number"]:hover, form input[type="text"]:hover {
-    border-color: #667eea;
-    background: white;
-}
-
-form input[type="number"]:focus, form input[type="text"]:focus {
     outline: none;
     border-color: #667eea;
     background: white;
@@ -273,20 +219,6 @@ form input[type="submit"]:active {
     transform: translateY(0);
 }
 
-/* Zone pour les boutons Précédent / Suivant */
-.navigation-buttons {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 30px;
-    gap: 15px;
-}
-form button[type="submit"]#btn-submit {
-    width: auto;
-    margin-top: 0;
-    padding: 12px 30px;
-}
-
 /* Progression par critère */
 .critere-block {
     transition: opacity 0.4s ease, transform 0.4s ease;
@@ -302,7 +234,6 @@ form button[type="submit"]#btn-submit {
     from { opacity: 0; transform: translateY(12px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-
 .critere-header {
     font-size: 1.1em;
     font-weight: bold;
@@ -315,8 +246,8 @@ form button[type="submit"]#btn-submit {
 /* Barre de progression verticale */
 .progress-bar-container {
     position: fixed;
-    top: 115px;
-    bottom: 80px;
+    top: 115px;        /* Sous le header sticky (~80px de hauteur) */
+    bottom: 80px;     /* Au-dessus du footer */
     left: calc((100vw - 800px) / 4);
     width: 15px;
     background: #e2e8f0;
@@ -354,7 +285,7 @@ form button[type="submit"]#btn-submit {
     form p {
         font-size: 0.95rem;
     }
-    form select, form input[type="number"], form input[type="text"] {
+    form select {
         padding: 12px 16px;
         font-size: 0.95rem;
     }
@@ -362,3 +293,37 @@ form button[type="submit"]#btn-submit {
         display: none;
     }
 }
+
+
+
+form input[type="number"] {
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #333;
+    transition: all 0.3s ease;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+form input[type="number"]::-webkit-outer-spin-button,
+form input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+form input[type="number"]:hover {
+    border-color: #667eea;
+    background: white;
+}
+
+form input[type="number"]:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+
