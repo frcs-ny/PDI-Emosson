@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>PDI Emosson</title>
+</head>
+<body>
+
+  <h1>PDI Emosson</h1>
+  <h2>Logement dans une zone d'inondation ?</h2>
+
+  <label for="adresse">Votre adresse :</label><br>
+  <input type="text" id="adresse" placeholder="Ex: Rue du Lac 12, Martigny">
+  <button id="btn">Rechercher</button>
+
+  <p id="resultat"></p>
+
+  <script>
+    document.getElementById('btn').addEventListener('click', async function() {
+      const btn = document.getElementById('btn');
+      const adresse = document.getElementById('adresse').value;
+
+      btn.disabled = true;
+      btn.innerText = "Chargement...";
+
+      const response = await fetch('/adresse?adresse=' + encodeURIComponent(adresse));
+      const data = await response.json();
+
+      document.getElementById('resultat').innerText = data.message;
+
+      btn.disabled = false;
+      btn.innerText = "Rechercher";
+    });
+  </script>
+
+</body>
+</html>
