@@ -1,0 +1,41 @@
+services:
+  flask: # Remplacement de l'ancien service "php"
+    build: .
+    ports:
+      - "8000:5000" # Mappe le port 8000 de votre machine vers le 5000 du conteneur
+    volumes:
+      # On monte votre dossier de code dans /app au lieu de /var/www/html/
+      - ./backend:/app 
+    environment:
+      - FLASK_APP=app.py       # Le point d'entrée de votre application
+      - FLASK_DEBUG=1          # Active le rechargement à chaud à chaque sauvegarde
+      # Je vous prépare la variable de connexion à la base de données !
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb 
+
+  db:
+    # Votre configuration PostGIS reste inchangée
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  pgadmin:
+    # Votre configuration pgAdmin reste inchangée
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+
+volumes:
+  pg_data:
+  pgadmin_data:
