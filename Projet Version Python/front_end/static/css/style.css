@@ -4,7 +4,7 @@
     box-sizing: border-box;
 }
 
-/* --- FIX FOOTER RENFORCÉ : Étape 1 --- */
+
 html, body {
     height: 100%;
 }
@@ -13,13 +13,12 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
     line-height: 1.6;
-    /* Transformation du body en colonne flexible */
     display: flex;
     flex-direction: column;
     min-height: 100vh; 
 }
 
-/* Bandeau d'en-tête */
+
 header {
     background: linear-gradient(135deg, #667eea 0%, #448dcd 100%);
     color: white;
@@ -63,7 +62,7 @@ header h1 {
     background: #f0f0f0;
 }
 
-/* Boutons désactivés (Précédent / Suivant) */
+
 .btn:disabled, form button[type="submit"]:disabled {
     background: #cccccc;
     color: #666;
@@ -73,17 +72,17 @@ header h1 {
     border: none;
 }
 
-/* --- FIX FOOTER RENFORCÉ : Étape 2 --- */
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
     width: 100%;
-    /* Le container prend tout l'espace libre pour pousser le footer vers le bas */
+
     flex: 1; 
 }
 
-/* Sections de contenu */
+
 .section {
     margin-bottom: 60px;
 }
@@ -102,7 +101,7 @@ header h1 {
     text-align: justify;
 }
 
-/* Image dans le header */
+
 header img {
     max-height: 60px;
     width: auto;
@@ -153,18 +152,17 @@ header img {
     height: 250px;
 }
 
-/* --- FIX FOOTER RENFORCÉ : Étape 3 --- */
+
 footer {
     background: #333;
     color: white;
     text-align: center;
     padding: 20px 0;
     width: 100%;
-    /* margin-top: auto s'assure qu'il reste collé en bas */
     margin-top: auto; 
 }
 
-/* Formulaire */
+
 form {
     background: white;
     padding: 40px;
@@ -215,7 +213,7 @@ form select:focus {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-/* Nouveaux styles pour les inputs text et number */
+
 form input[type="number"], form input[type="text"] {
     width: 100%;
     padding: 14px 18px;
@@ -273,7 +271,6 @@ form input[type="submit"]:active {
     transform: translateY(0);
 }
 
-/* Zone pour les boutons Précédent / Suivant */
 .navigation-buttons {
     display: flex;
     justify-content: space-between;
@@ -287,7 +284,7 @@ form button[type="submit"]#btn-submit {
     padding: 12px 30px;
 }
 
-/* Progression par critère */
+
 .critere-block {
     transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -312,7 +309,7 @@ form button[type="submit"]#btn-submit {
     color: #2c5282;
 }
 
-/* Barre de progression verticale */
+
 .progress-bar-container {
     position: fixed;
     top: 115px;
@@ -333,7 +330,7 @@ form button[type="submit"]#btn-submit {
     height: 0%;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
@@ -361,4 +358,25 @@ form button[type="submit"]#btn-submit {
     .progress-bar-container {
         display: none;
     }
+}
+
+.navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            gap: 15px;
+}
+form button[type="submit"]#btn-submit {
+            width: auto;
+            margin-top: 0;
+            padding: 12px 30px;
+}
+.btn:disabled, form button[type="submit"]:disabled {
+            background: #cccccc;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            border: none;
 }
