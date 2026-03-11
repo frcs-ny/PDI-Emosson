@@ -310,7 +310,7 @@ form button[type="submit"]#btn-submit {
 }
 
 
-.progress-bar-container {
+.progress_bar_container {
     position: fixed;
     top: 115px;
     bottom: 80px;
@@ -322,7 +322,7 @@ form button[type="submit"]#btn-submit {
     overflow: hidden;
 }
 
-.progress-bar {
+.progress_bar {
     width: 100%;
     background: linear-gradient(180deg, #667eea, #448dcd);
     border-radius: 999px;
