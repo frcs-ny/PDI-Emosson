@@ -1,5 +1,5 @@
 services:
-  flask: # Remplacement de l'ancien service "php"
+  flask: 
     build: .
     ports:
       - "8000:5000" # Mappe le port 8000 de votre machine vers le 5000 du conteneur
