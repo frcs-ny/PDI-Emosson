@@ -55,7 +55,6 @@ def accueil():
 
 @app.route('/questionnaire')
 def questionnaire():
-    # On unpack les 3 valeurs retournées (le score max n'est pas utilisé ici, d'où le "_")
     questions_zone, questions_logement, _ = get_questions()
 
     etapes = [

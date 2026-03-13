@@ -130,7 +130,11 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
  ARRAY[0, 0, 0]),
 
 ('Installation de chauffage', 'A quelle hauteur est située votre [chaudière sur socle, chaudière murale, brûleur de fioul] ? Hauteur à apprécier à partir du rdc ou du sous-sol en fonction de sa localisation', 
- ARRAY['Si localisation au sous-sol', 'Si localisation au rdc et H > H de la crue de référence', 'Si localisation au rdc et H < H de la crue de référence'], 
+ ARRAY['x'], 
+ ARRAY[10, 10, 0]),
+
+ ('Installation de chauffage', 'A quelle hauteur est située votre [chaudière sur socle, chaudière murale, brûleur de fioul] ? Hauteur à apprécier à partir du rdc ou du sous-sol en fonction de sa localisation', 
+ ARRAY['Si localisation au sous-sol', 'Si localisation au rdc et x > x de la crue de référence', 'Si localisation au rdc et x < x de la crue de référence'], 
  ARRAY[10, 10, 0]),
 
 ('Installation de chauffage', 'Convecteurs électriques ? Utilisés notamment pour le chauffage de plancher ou chauffage mural', 

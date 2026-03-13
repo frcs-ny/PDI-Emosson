@@ -9,27 +9,26 @@
 <body>
     <div class="container">
         
-        <div id="zone-pdf" style="padding: 20px; background: white;">
+        <div id="zone-pdf">
             <h1>Résultat de votre évaluation</h1>
             
-            <div class="resultat-box" style="text-align: center; padding: 30px; border: 2px solid {{ couleur_score }}; border-radius: 15px; margin-top: 20px;">
-                <p style="font-size: 1.2em; font-weight: bold; color: #555;">Votre niveau de vulnérabilité :</p>
+            <div class="resultat-box" style="border-color: {{ couleur_score }};">
+                <p class="resultat-label">Votre niveau de vulnérabilité :</p>
                 
-                <h2 style="font-size: 4.5em; color: {{ couleur_score }}; margin: 15px 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.1);">
+                <h2 class="resultat-score" style="color: {{ couleur_score }};">
                     {{ score_cent }}/100
                 </h2>
 
-                <div style="width: 100%; background: #e2e8f0; border-radius: 15px; height: 25px; margin: 20px 0; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-                    <div style="width: {{ score_cent }}%; background: {{ couleur_score }}; height: 100%; transition: width 1.5s ease-out;"></div>
+                <div class="resultat-progress-bg">
+                    <div class="resultat-progress-fill" style="width: {{ score_cent }}%; background-color: {{ couleur_score }};"></div>
                 </div>
-                
             </div>
 
         </div>
         <br>
-        <div style="text-align: center; margin-top: 20px; display: flex; justify-content: center; gap: 15px;">
+        <div class="action-buttons">
             <a href="/questionnaire" class="btn">Recommencer le diagnostic</a>
-            <button id="btn-telecharger" class="btn" style="background-color: #48bb78; color: white; border: none; cursor: pointer;">
+            <button id="btn-telecharger" class="btn btn-green">
                 Télécharger en PDF
             </button>
         </div>
