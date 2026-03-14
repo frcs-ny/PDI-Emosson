@@ -3,42 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Questionnaire Emosson</title>
     <link rel="stylesheet" href="../static/css/style.css">
-
 </head>
 
 <body>
     <header>
         <div class="header-container">
-
-     
             <img src="../static/img/castor_emosson.png" alt="logo">
-
-            
             <h1>Emosson - Diagnostic</h1>
             <a href="/accueil" class="btn">Retourner à l'accueil</a>
-
         </div>
     </header>
 
     <div class="progress_bar_container">
         <div class="progress_bar" id="globalProgress"></div>
     </div>
+    
     <div class="container">
-
         <form action="/calcul" method="get" id="diagnostic_form">
-
             <div id="form-steps">
                 {% for etape in etapes %}
-                <div class="critere-block
-                    {% if loop.first %}
-                        unlocking
-                    {% else %}
-                        locked
-                    {% endif %}"
-                    data-step="{{ loop.index0 }}">
+                <div class="critere-block {% if loop.first %} unlocking {% else %} locked {% endif %}"
+                    data-step="{{ loop.index0 }}"
+                    {% if etape.parent_name %} data-parent="{{ etape.parent_name }}" {% endif %}>
+                    
                     <div class="critere-header">
                         {{ etape.critere }}
                     </div>
@@ -47,15 +36,10 @@
                         {{ etape.question }}
                         {% if etape.type == 'select' %}
                         <select name="{{ etape.name }}" required class="step-input">
-
-                         
                             <option value="" disabled selected>-- Choisir --</option>
-
                             {% for index, rep in etape.options %}
-
                             <option value="{{ index }}">{{ rep }}</option>
                             {% endfor %}
-
                         </select>
 
                         {% elif etape.type == 'number' %}
@@ -73,140 +57,221 @@
                                {% if etape.pattern %}pattern="{{ etape.pattern }}"{% endif %}
                                required
                                class="step-input">
-
                         {% endif %}
                     </p>
-
                 </div>
                 {% endfor %}
-
             </div>
 
             <div class="navigation-buttons">
                 <button type="button" id="bouton_prec" class="btn" style="display: none;">
                     Précédent
                 </button>
-
                 <div style="flex-grow: 1;"></div>
-            
                 <button type="button" id="bouton_suiv" class="btn" disabled>
                     Suivant
                 </button>
-
                 <button type="submit" id="bouton_valider" style="display: none;">
                     Calculer mon score
                 </button>
             </div>
         </form>
     </div>
+    
     <footer>
-
         <p>&copy; {{ now.year }} Emosson. Tous droits réservés.</p>
     </footer>
 
     <script>
     document.addEventListener("DOMContentLoaded", function() {
 
-    const steps           = document.querySelectorAll('.critere-block');
-    const bouton_precedent = document.getElementById('bouton_prec');
-    const bouton_suivant  = document.getElementById('bouton_suiv');
-    const bouton_valider  = document.getElementById('bouton_valider');
-    const progressBar     = document.getElementById('globalProgress');
-    const form            = document.getElementById('diagnostic_form');
+        const steps           = document.querySelectorAll('.critere-block');
+        const bouton_precedent = document.getElementById('bouton_prec');
+        const bouton_suivant  = document.getElementById('bouton_suiv');
+        const bouton_valider  = document.getElementById('bouton_valider');
+        const progressBar     = document.getElementById('globalProgress');
+        const form            = document.getElementById('diagnostic_form');
 
-    const totalSteps = steps.length;
-    let currentStep = 0;
+        const totalSteps = steps.length;
+        let currentStep = 0;
 
-    function updateUI() {
-        steps.forEach(function(step, i) {
-            if (i === currentStep) {
-                step.classList.remove('locked');
-                step.classList.add('unlocking');
-            } else {
-                step.classList.remove('unlocking');
-                step.classList.add('locked');
-            }
-        });
-        const progressPct = (currentStep / (totalSteps - 1)) * 100;
-        progressBar.style.height = progressPct + '%';
+        // Fonction qui détermine si une question doit être affichée ou sautée
+        function isStepActive(index) {
+            const step = steps[index];
+            const parentName = step.getAttribute('data-parent');
+            
+            // Si pas de parent, la question est toujours active
+            if (!parentName) return true;
 
-        if (currentStep === 0) {
-            bouton_precedent.style.display = 'none';
-        } else {
-            bouton_precedent.style.display = 'inline-block';
-        }
-
-        if (currentStep === totalSteps - 1) {
-            bouton_suivant.style.display = 'none';
-            bouton_valider.style.display = 'inline-block';
-        } else {
-            bouton_suivant.style.display = 'inline-block';
-            bouton_valider.style.display = 'none';
-        }
-
-        checkValidity();
-    }
-
-    function checkValidity() {
-        const currentInput = steps[currentStep].querySelector('.step-input');
-        const isValid = currentInput.checkValidity() && currentInput.value.trim() !== '';
-
-        bouton_suivant.disabled = !isValid;
-
-        if (currentStep == totalSteps - 1) {
-            bouton_valider.disabled = !isValid;
-        }
-    }
-
-    steps.forEach(function(step) {
-        const input = step.querySelector('.step-input');
-
-        input.addEventListener('input', checkValidity);
-
-        input.addEventListener('change', function() {
-            checkValidity();
-            const isSelect = input.tagName.toLowerCase() === 'select';
-            if (isSelect && input.checkValidity()) {
-                setTimeout(function() {
-                    if (currentStep < totalSteps - 1) {
-                        currentStep += 1;
-                        updateUI();
-                    }
-                }, 300);
-            }
-        });
-
-        input.addEventListener('keypress', function(e) {
-            if (e.key == 'Enter') {
-                e.preventDefault();
-                if (!bouton_suivant.disabled && currentStep < totalSteps - 1) {
-                    currentStep += 1;
-                    updateUI();
-                } else if (currentStep == totalSteps - 1 && !bouton_valider.disabled) {
-                    form.submit();
+            const parentInput = document.querySelector('[name="' + parentName + '"]');
+            if (parentInput && parentInput.tagName.toLowerCase() === 'select') {
+                const selectedOption = parentInput.options[parentInput.selectedIndex];
+                
+                // Si le parent n'a pas encore de réponse, on désactive la question dépendante
+                if (!selectedOption || selectedOption.value === "") return false;
+                
+                const valText = selectedOption.text.trim().toLowerCase();
+                
+                // --- RÈGLE GÉNÉRALE ---
+                // Si la réponse parent est "Non" ou "Je n'ai pas de cuves", on masque.
+                if (valText === 'non' || valText === "je n'ai pas de cuves") {
+                    return false;
                 }
             }
+            return true;
+        }
+
+        // Met à jour l'affichage de l'étape courante, de la barre de progression et des boutons
+        function updateUI() {
+            let activeStepsCount = 0;
+            let currentActiveIndex = 0;
+            let lastActiveIndex = -1;
+
+            // Déterminer le total des questions actives (pour la barre de progression)
+            steps.forEach(function(step, i) {
+                const input = step.querySelector('.step-input');
+                const isActive = isStepActive(i);
+
+                if (!isActive) {
+                    input.removeAttribute('required'); // Pour ne pas bloquer le bouton valider
+                    step.style.display = 'none'; // Masquer complètement l'élément
+                    step.classList.remove('unlocking');
+                    step.classList.add('locked');
+                } else {
+                    activeStepsCount++;
+                    input.setAttribute('required', 'required');
+                    step.style.display = ''; 
+                    lastActiveIndex = i;
+
+                    if (i === currentStep) {
+                        step.classList.remove('locked');
+                        step.classList.add('unlocking');
+                        currentActiveIndex = activeStepsCount;
+                    } else {
+                        step.classList.remove('unlocking');
+                        step.classList.add('locked');
+                    }
+                }
+            });
+
+            // Barre de progression dynamique basée uniquement sur les étapes visibles
+            let progressPct = 0;
+            if (activeStepsCount > 1) {
+                progressPct = ((currentActiveIndex - 1) / (activeStepsCount - 1)) * 100;
+            } else {
+                progressPct = 100;
+            }
+            progressBar.style.height = progressPct + '%';
+
+            // Bouton précédent
+            bouton_precedent.style.display = (currentActiveIndex <= 1) ? 'none' : 'inline-block';
+
+            // Gérer "Suivant" vs "Calculer"
+            if (currentStep === lastActiveIndex) {
+                bouton_suivant.style.display = 'none';
+                bouton_valider.style.display = 'inline-block';
+            } else {
+                bouton_suivant.style.display = 'inline-block';
+                bouton_valider.style.display = 'none';
+            }
+
+            checkValidity();
+        }
+
+        function checkValidity() {
+            const currentInput = steps[currentStep].querySelector('.step-input');
+            const isValid = currentInput.checkValidity() && currentInput.value.trim() !== '';
+
+            bouton_suivant.disabled = !isValid;
+
+            // Savoir si nous sommes à la dernière étape active
+            let lastActiveIndex = -1;
+            for (let i = totalSteps - 1; i >= 0; i--) {
+                if (isStepActive(i)) {
+                    lastActiveIndex = i;
+                    break;
+                }
+            }
+
+            if (currentStep === lastActiveIndex) {
+                bouton_valider.disabled = !isValid;
+            }
+        }
+
+        // Permet de passer à la prochaine étape *active*
+        function goNext() {
+            let nextIndex = currentStep + 1;
+            // On saute les questions qui ne remplissent pas la condition
+            while (nextIndex < totalSteps && !isStepActive(nextIndex)) {
+                // On s'assure de vider les champs ignorés
+                const input = steps[nextIndex].querySelector('.step-input');
+                if (input) input.value = "";
+                nextIndex++;
+            }
+            if (nextIndex < totalSteps) {
+                currentStep = nextIndex;
+                updateUI();
+            }
+        }
+
+        // Permet de revenir à la précédente étape *active*
+        function goPrev() {
+            let prevIndex = currentStep - 1;
+            while (prevIndex >= 0 && !isStepActive(prevIndex)) {
+                prevIndex--;
+            }
+            if (prevIndex >= 0) {
+                currentStep = prevIndex;
+                updateUI();
+            }
+        }
+
+        // Gestionnaires d'évènements
+        steps.forEach(function(step) {
+            const input = step.querySelector('.step-input');
+
+            input.addEventListener('input', checkValidity);
+
+            input.addEventListener('change', function() {
+                checkValidity();
+                const isSelect = input.tagName.toLowerCase() === 'select';
+                if (isSelect && input.checkValidity()) {
+                    setTimeout(function() {
+                        // Trouver le dernier index actif
+                        let lastActiveIndex = -1;
+                        for (let i = totalSteps - 1; i >= 0; i--) {
+                            if (isStepActive(i)) { lastActiveIndex = i; break; }
+                        }
+                        if (currentStep < lastActiveIndex) {
+                            goNext();
+                        }
+                    }, 300); // petit délai pour fluidité
+                }
+            });
+
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    let lastActiveIndex = -1;
+                    for (let i = totalSteps - 1; i >= 0; i--) {
+                        if (isStepActive(i)) { lastActiveIndex = i; break; }
+                    }
+
+                    if (!bouton_suivant.disabled && currentStep < lastActiveIndex) {
+                        goNext();
+                    } else if (currentStep === lastActiveIndex && !bouton_valider.disabled) {
+                        form.submit();
+                    }
+                }
+            });
         });
-    });
 
-    bouton_suivant.addEventListener('click', function() {
-        if (currentStep < totalSteps - 1) {
-            currentStep += 1;
-            updateUI();
-        }
-    });
+        bouton_suivant.addEventListener('click', goNext);
+        bouton_precedent.addEventListener('click', goPrev);
 
-    bouton_precedent.addEventListener('click', function() {
-        if (currentStep > 0) {
-            currentStep -= 1;
-            updateUI();
-        }
+        // Initialisation de l'affichage
+        updateUI();
     });
-
-    updateUI();
-    });
-
     </script>
-
 </body>
 </html>
