@@ -373,13 +373,24 @@ def calcul():
 
 @app.route('/statistiques')
 def statistiques():
-    # Par défaut, on affiche les stats de la question 1 de la catégorie "logement"
-    question_id = request.args.get('id', 1, type=int)
+    # Récupération de toutes les questions pour alimenter la liste déroulante
+    questions_zone, questions_logement, questions_protection, _ = get_questions()
+    
     categorie = request.args.get('categorie', 'logement')
+    
+    # Définir l'ID par défaut sur la première question de la catégorie choisie
+    default_id = 1
+    if categorie == 'logement' and questions_logement:
+        default_id = questions_logement[0]['id']
+    elif categorie == 'zone' and questions_zone:
+        default_id = questions_zone[0]['id']
+    elif categorie == 'protection' and questions_protection:
+        default_id = questions_protection[0]['id']
+        
+    question_id = request.args.get('id', default_id, type=int)
 
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     
-    # Récupération de la question exacte pour l'afficher en titre
     if categorie == 'logement':
         table_name = "public.questions_logement"
     elif categorie == 'protection':
@@ -394,7 +405,7 @@ def statistiques():
         if result:
             question_texte = result['question']
             
-        # Requête pour calculer les statistiques (compte et pourcentage)
+        # Requête pour calculer les statistiques
         query = """
             SELECT 
                 reponse_donnee AS reponse,
@@ -421,6 +432,9 @@ def statistiques():
                            question_texte=question_texte, 
                            id=question_id, 
                            categorie=categorie,
+                           questions_zone=questions_zone,
+                           questions_logement=questions_logement,
+                           questions_protection=questions_protection,
                            now=datetime.now())
 
 

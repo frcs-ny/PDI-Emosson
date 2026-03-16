@@ -521,6 +521,14 @@ form button[type="submit"]#btn-submit {
     padding: 15px;
     background-color: #f4f4f4;
     border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.question-select {
+    width: 500px;
+    max-width: 100%;
 }
 /* ------------------------------------- */
 /* RESPONSIVE DESIGN */
