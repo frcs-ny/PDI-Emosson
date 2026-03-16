@@ -5,7 +5,6 @@ import psycopg2.extras
 import os
 import json
 
-from api_georisques import recuperer_coordonnees, est_dans_une_zone_inondable
 from estdansunezich import adresse_vers_coordonnees, recuperer_info_toutes_les_station, trouver_station_plus_proche, recuperer_geom_zich, est_dans_une_zich
 
 app = Flask(
@@ -16,23 +15,29 @@ app = Flask(
 
 # connexion à la BDD
 conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
+conn.autocommit = True
 
 # requetes SQL
 def get_questions():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee FROM public.zone_inondable ORDER BY id")
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.zone_inondable ORDER BY id")
     questions_zone = [dict(row) for row in cur.fetchall()]
     for q in questions_zone:
         q['prefix'] = 'zone'
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee FROM public.questions_logement ORDER BY id")
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.questions_logement ORDER BY id")
     questions_logement = [dict(row) for row in cur.fetchall()]
     for q in questions_logement:
         q['prefix'] = 'logement'
 
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.protection_personnes ORDER BY id")
+    questions_protection = [dict(row) for row in cur.fetchall()]
+    for q in questions_protection:
+        q['prefix'] = 'protection'
+
     score_max_theorique = 0.0
-    all_questions = questions_zone + questions_logement
+    all_questions = questions_zone + questions_logement + questions_protection
     for q in all_questions:
         scores = q.get('scores_vulnerabilite')
         if scores:
@@ -43,7 +48,7 @@ def get_questions():
             except (ValueError, TypeError):
                 pass 
 
-    return questions_zone, questions_logement, score_max_theorique
+    return questions_zone, questions_logement, questions_protection, score_max_theorique
 
 
 @app.route('/')
@@ -54,17 +59,17 @@ def accueil():
 
 @app.route('/questionnaire')
 def questionnaire():
-    questions_zone, questions_logement, _ = get_questions()
+    questions_zone, questions_logement, questions_protection, _ = get_questions()
 
     etapes = [
+        {'critere': 'Informations générales', 'question': 'Nom et Prénom :',                 'type': 'text', 'name': 'nom',         'placeholder': 'Ex: Dupont',                  'pattern': None, 'a_dependance': False},
         {'critere': 'Informations générales', 'question': 'Numéro et libellé de la voie :',  'type': 'text', 'name': 'adresse',     'placeholder': 'Ex: 10 Rue de la République', 'pattern': None, 'a_dependance': False},
         {'critere': 'Informations générales', 'question': 'Code postal :',                   'type': 'text', 'name': 'code_postal', 'placeholder': 'Ex: 37000',                   'pattern': '[0-9]{5}', 'a_dependance': False},
         {'critere': 'Informations générales', 'question': 'Ville :',                         'type': 'text', 'name': 'ville',       'placeholder': 'Ex: Tours',                   'pattern': None, 'a_dependance': False},
     ]
 
-    questions = questions_zone + questions_logement
+    questions = questions_zone + questions_logement + questions_protection
     for q in questions:
-        # --- NOUVEAU : On cache la question Zone inondable et Hauteur d'eau ---
         if q['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"]:
             continue
 
@@ -93,10 +98,28 @@ def questionnaire():
 
 @app.route('/calcul')
 def calcul():
-    questions_zone, questions_logement, _ = get_questions()
-    all_questions_db = questions_zone + questions_logement
+    questions_zone, questions_logement, questions_protection, _ = get_questions()
+    all_questions_db = questions_zone + questions_logement + questions_protection
     
     details = []
+    
+    nom_utilisateur = request.args.get('nom', 'Utilisateur inconnu').strip()
+    if not nom_utilisateur:
+        nom_utilisateur = 'Utilisateur inconnu'
+        
+    # Structuration par catégories
+    recommandations_groupees = {
+        'zone': [],
+        'logement': [],
+        'protection': []
+    }
+    noms_categories = {
+        'zone': 'Risques en zone inondable',
+        'logement': 'Aménagement du logement',
+        'protection': 'Protection des personnes'
+    }
+    rappel_qr = []
+    
     niveau_plancher = 0.0
     
     adresse_brute = request.args.get('adresse', '')
@@ -110,7 +133,6 @@ def calcul():
     zone_choisie_texte = ""
     geom = None
 
-    # --- NOUVEAU : Récupération des données GPS et ZICH ---
     if adresse_complete:
         try:
             # 1. Obtenir les coordonnées GPS
@@ -118,16 +140,11 @@ def calcul():
             lon = result_coords['lon']
             lat = result_coords['lat']
             
-            # Appel API Géorisques classique (gardé à titre d'info)
-            vulnerability = est_dans_une_zone_inondable(lat, lon)
-            if vulnerability and vulnerability['found']:
-                details.append(f"ℹ️ Géorisques : Risque détecté ({', '.join(vulnerability['risques'])})")
-            
             # 2. Chercher les données de submersion ZICH
             stations = recuperer_info_toutes_les_station()
             code_station, nom_station = trouver_station_plus_proche(stations, lon, lat)
-            hauteur_max_station, geom = recuperer_geom_zich(code_station)
-            dans_zich, hmin_zich, hmax_zich, geom = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom)
+            hauteur_max_station, geom_zich = recuperer_geom_zich(code_station)
+            dans_zich, hmin_zich, hmax_zich, geom = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom_zich)
             
             if dans_zich:
                 # 3. Application de la classification du tableau PPRI
@@ -173,6 +190,7 @@ def calcul():
         critere = q['critere']
         reponses = q['reponses']
         scores = q['scores_vulnerabilite']
+        recommandations = q.get('recommandations', [])
         
         # Dépendances
         if q.get('a_dependance') and q.get('id_question_liee'):
@@ -188,7 +206,7 @@ def calcul():
         except (ValueError, TypeError):
             pass
             
-        # --- NOUVEAU : Traitement automatisé de la Zone Inondable ---
+        # Traitement automatisé de la Zone Inondable
         if critere == 'Zone inondable':
             if dans_zich and zone_choisie_texte != '':
                 idx = -1
@@ -203,7 +221,7 @@ def calcul():
                     details.append(f"Automatique - {critere} ({reponses[idx]}) : {score_obtenu} points")
             continue 
 
-        # --- NOUVEAU : Traitement automatisé de la Hauteur d'eau ---
+        # Traitement automatisé de la Hauteur d'eau
         if critere == "Hauteur d'eau potentielle":
             if dans_zich:
                 # Calcul de H (eau dans le logement) = Hauteur max de la zone - surélévation du plancher
@@ -226,11 +244,16 @@ def calcul():
         input_name = f"rep_{prefix}_{qid}"
         user_answer = request.args.get(input_name)
         
-        if user_answer is not None:
+        if user_answer is not None and str(user_answer).strip() != '':
+            texte_reponse = ""
+            texte_reco = ""
+            
             if len(reponses) == 1 and reponses[0] == 'x':
                 try:
                     niveau_plancher = float(user_answer)
+                    texte_reponse = f"{niveau_plancher} m"
                     details.append(f"{critere} : {niveau_plancher} m")
+                    texte_reco = recommandations[0] if recommandations and len(recommandations) > 0 else ""
                 except ValueError:
                     pass
             else:
@@ -241,8 +264,30 @@ def calcul():
                     
                     score_total += score_obtenu
                     details.append(f"{critere} ({texte_reponse}) : {score_obtenu} points")
+                    texte_reco = recommandations[index] if recommandations and len(recommandations) > index else ""
                 except (ValueError, IndexError):
                     pass
+
+            if texte_reponse:
+                rappel_qr.append({
+                    'question': q['question'],
+                    'reponse': texte_reponse,
+                    'recommandation': texte_reco
+                })
+                
+                # Ajout dans la bonne catégorie
+                if texte_reco and texte_reco not in recommandations_groupees[prefix]:
+                    recommandations_groupees[prefix].append(texte_reco)
+
+
+    # Préparation de la liste finale pour le template
+    recommandations_finales = []
+    for pref, recos in recommandations_groupees.items():
+        if recos: # Ne garde que les catégories qui ont au moins 1 recommandation
+            recommandations_finales.append({
+                'titre': noms_categories[pref],
+                'recos': recos
+            })
 
     # 3. Affichage des couleurs et du score
     if score_max_dynamique > 0:
@@ -257,6 +302,7 @@ def calcul():
     geom_json = json.dumps(geom) if geom else 'null'
 
     return render_template('calcul.html', 
+                       nom=nom_utilisateur,
                        score_total=round(score_total, 2),
                        score_cent=score_cent,
                        couleur_score=couleur_score,
@@ -267,7 +313,9 @@ def calcul():
                        dans_zich=dans_zich,
                        hmax_zich=round(hmax_zich, 2) if hmax_zich else 0, 
                        zone_choisie_texte=zone_choisie_texte,
-                       geom=geom_json)
+                       geom=geom_json,
+                       recommandations_finales=recommandations_finales,
+                       rappel_qr=rappel_qr)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

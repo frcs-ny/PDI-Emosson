@@ -6,30 +6,34 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/css_calcul_carte.css') }}">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
-
+        
         <div id="zone-pdf">
-            <h1>Résultat de votre évaluation</h1>
-
-            <div class="resultat-box" style="border-color: {{ couleur_score }};">
-                <p class="resultat-label">Votre niveau de vulnérabilité :</p>
-                <h2 class="resultat-score" style="color: {{ couleur_score }};">
+            
+            <div class="header-bilan">
+                <h1>Bilan de vulnérabilité au risque inondation</h1>
+                <div class="user-info">
+                    M. ou Mme {{ nom }} vivant au {{ adresse }}
+                </div>
+            </div>
+            
+            <div class="score-container">
+                <h3>Score de vulnérabilité</h3>
+                <div class="cercle-score" style="border-color: {{ couleur_score }}; color: {{ couleur_score }};">
                     {{ score_cent }}/100
-                </h2>
-                <div class="resultat-progress-bg">
-                    <div class="resultat-progress-fill" style="width: {{ score_cent }}%; background-color: {{ couleur_score }};"></div>
                 </div>
             </div>
 
-            <h2 class="carte-titre">Carte de l'aléa inondation</h2>
+            <h2 class="section-title carte-titre">Carte de l'aléa inondation</h2>
 
-           {% if not dans_zich %}
+            {% if not dans_zich %}
             <div class="alerte-barre alerte-vert">
                 <div class="alerte-titre-principal">HORS ZONE INONDABLE</div>
-                <div class="alerte-description">Votre logement n'est pas exposé à un risque d'inondation.</div>
+                <div class="alerte-description">Votre logement n'est pas exposé à un risque d'inondation pour le scénario extrême étudié.</div>
             </div>
             {% elif hmax_zich <= 1.0 %}
             <div class="alerte-barre alerte-jaune">
@@ -51,10 +55,60 @@
             </div>
             {% endif %}
 
-            <div id="map"></div>
+            <div id="map" style="margin-bottom: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></div>
+
+
+            <h2 class="section-title">Recommandations</h2>
+            
+            {% if recommandations_finales %}
+                {% for groupe in recommandations_finales %}
+                
+                <h3 class="reco-category-title">{{ groupe.titre }}</h3>
+                
+                <ul class="reco-list">
+                    {% for reco in groupe.recos %}
+                    <li class="reco-item">
+                        {{ reco }}
+                        
+                        {% if 'cuve' in reco.lower() or 'polluant' in reco.lower() %}
+                            <img src="{{ url_for('static', filename='img/cuve.jpg') }}" alt="Arrimage d'une cuve" class="reco-image" style="max-width: 400px;">
+                        {% endif %}
+                        
+                        {% if 'piscine' in reco.lower() or 'bassin' in reco.lower() %}
+                            <img src="{{ url_for('static', filename='img/Piscine.jpg') }}" alt="Matérialiser les piscines" class="reco-image" style="max-width: 400px;">
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                {% endfor %}
+            {% else %}
+                <p>Votre logement semble bien préparé, aucune recommandation spécifique n'a été détectée d'après vos réponses.</p>
+            {% endif %}
+
+            <h2 class="section-title">Rappel des réponses aux questions</h2>
+            <table class="rappel-table">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Votre réponse</th>
+                        <th>Recommandation associée</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in rappel_qr %}
+                    <tr>
+                        <td>{{ item.question }}</td>
+                        <td><strong>{{ item.reponse }}</strong></td>
+                        <td><small>{{ item.recommandation if item.recommandation else '-' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
         </div>
         <br>
+        
         <div class="action-buttons">
             <a href="/questionnaire" class="btn">Recommencer le diagnostic</a>
             <button id="btn-telecharger" class="btn btn-green">
@@ -65,19 +119,25 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="{{ url_for('static', filename='JS/js_calcul_carte.js') }}"></script>
+    
     <script>
+        // Fonction d'export PDF
         document.getElementById('btn-telecharger').addEventListener('click', function () {
             var element = document.getElementById('zone-pdf');
+            
             var opt = {
-                margin:       10,
-                filename:     'Diagnostic_Vulnerabilite_Emosson.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+              margin:       [10, 10, 10, 10], 
+              filename:     'Bilan_Vulnerabilite_Inondation.pdf',
+              image:        { type: 'jpeg', quality: 0.98 },
+              html2canvas:  { scale: 2, useCORS: true }, // useCORS important pour charger les images et la map dans le PDF
+              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
+
             html2pdf().set(opt).from(element).save();
         });
 
+        // Initialisation de la carte Leaflet
+        // L'objet geom est passé depuis Flask en JSON sécurisé
         initMap({{ lat }}, {{ lon }}, {{ geom | safe }});
     </script>
 </body>

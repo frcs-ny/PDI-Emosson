@@ -4,7 +4,6 @@
     box-sizing: border-box;
 }
 
-
 html, body {
     height: 100%;
 }
@@ -17,7 +16,6 @@ body {
     flex-direction: column;
     min-height: 100vh; 
 }
-
 
 header {
     background: linear-gradient(135deg, #667eea 0%, #448dcd 100%);
@@ -62,7 +60,6 @@ header h1 {
     background: #f0f0f0;
 }
 
-
 .btn:disabled, form button[type="submit"]:disabled {
     background: #cccccc;
     color: #666;
@@ -72,16 +69,13 @@ header h1 {
     border: none;
 }
 
-
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 40px 20px;
     width: 100%;
-
     flex: 1; 
 }
-
 
 .section {
     margin-bottom: 60px;
@@ -100,7 +94,6 @@ header h1 {
     margin-bottom: 15px;
     text-align: justify;
 }
-
 
 header img {
     max-height: 60px;
@@ -152,7 +145,6 @@ header img {
     height: 250px;
 }
 
-
 footer {
     background: #333;
     color: white;
@@ -162,6 +154,9 @@ footer {
     margin-top: auto; 
 }
 
+/* ------------------------------------- */
+/* FORMULAIRE (QUESTIONNAIRE) */
+/* ------------------------------------- */
 
 form {
     background: white;
@@ -201,18 +196,17 @@ form select {
     padding-right: 45px;
 }
 
-form select:hover {
+form select:hover, form input[type="number"]:hover, form input[type="text"]:hover {
     border-color: #667eea;
     background: white;
 }
 
-form select:focus {
+form select:focus, form input[type="number"]:focus, form input[type="text"]:focus {
     outline: none;
     border-color: #667eea;
     background: white;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
-
 
 form input[type="number"], form input[type="text"] {
     width: 100%;
@@ -232,18 +226,6 @@ form input[type="number"]::-webkit-inner-spin-button {
     margin: 0;
 }
 
-form input[type="number"]:hover, form input[type="text"]:hover {
-    border-color: #667eea;
-    background: white;
-}
-
-form input[type="number"]:focus, form input[type="text"]:focus {
-    outline: none;
-    border-color: #667eea;
-    background: white;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
 form button[type="submit"],
 form input[type="submit"] {
     width: 100%;
@@ -260,14 +242,12 @@ form input[type="submit"] {
     margin-top: 20px;
 }
 
-form button[type="submit"]:hover,
-form input[type="submit"]:hover {
+form button[type="submit"]:hover, form input[type="submit"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
 }
 
-form button[type="submit"]:active,
-form input[type="submit"]:active {
+form button[type="submit"]:active, form input[type="submit"]:active {
     transform: translateY(0);
 }
 
@@ -278,12 +258,12 @@ form input[type="submit"]:active {
     margin-top: 30px;
     gap: 15px;
 }
+
 form button[type="submit"]#btn-submit {
     width: auto;
     margin-top: 0;
     padding: 12px 30px;
 }
-
 
 .critere-block {
     transition: opacity 0.4s ease, transform 0.4s ease;
@@ -309,7 +289,6 @@ form button[type="submit"]#btn-submit {
     color: #2c5282;
 }
 
-
 .progress_bar_container {
     position: fixed;
     top: 115px;
@@ -331,6 +310,159 @@ form button[type="submit"]#btn-submit {
 }
 
 
+/* ------------------------------------- */
+/* BILAN & RESULTATS */
+/* ------------------------------------- */
+
+#zone-pdf {
+    padding: 20px;
+    background: white;
+    color: #333;
+    font-family: Arial, sans-serif;
+}
+
+.header-bilan {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.header-bilan h1 {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+.user-info {
+    font-size: 1.2em;
+    font-style: italic;
+    color: #555;
+    margin-bottom: 20px;
+}
+.score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 30px 0;
+}
+.cercle-score {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 8px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5em;
+    font-weight: bold;
+    background-color: #f9f9f9;
+}
+.section-title {
+    color: #2c3e50;
+    margin-top: 40px;
+    border-left: 5px solid #3498db;
+    padding-left: 10px;
+}
+
+.reco-category-title {
+    color: #448dcd;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 5px;
+}
+
+.reco-list {
+    list-style-type: none;
+    padding: 0;
+}
+.reco-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+    page-break-inside: avoid;
+}
+.reco-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 15px;
+    border-radius: 4px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.rappel-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+.rappel-table th, .rappel-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+.rappel-table th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+.rappel-table tr {
+    page-break-inside: avoid;
+}
+
+/* Anciens styles de résultat (gardés au cas où) */
+.resultat-box {
+    text-align: center;
+    padding: 30px;
+    border-style: solid;
+    border-width: 2px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+.resultat-label {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #555;
+}
+.resultat-score {
+    font-size: 4.5em;
+    margin: 15px 0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+.resultat-progress-bg {
+    width: 100%;
+    background: #e2e8f0;
+    border-radius: 15px;
+    height: 25px;
+    margin: 20px 0;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.resultat-progress-fill {
+    height: 100%;
+    transition: width 1.5s ease-out;
+}
+
+.action-buttons {
+    text-align: center;
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+.btn-green {
+    background-color: #48bb78 !important;
+    color: white !important;
+    border: none;
+    cursor: pointer;
+}
+.btn-green:hover {
+    background-color: #38a169 !important;
+}
+
+/* ------------------------------------- */
+/* RESPONSIVE DESIGN */
+/* ------------------------------------- */
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
@@ -355,91 +487,7 @@ form button[type="submit"]#btn-submit {
         padding: 12px 16px;
         font-size: 0.95rem;
     }
-    .progress-bar-container {
+    .progress_bar_container {
         display: none;
     }
-}
-
-.navigation-buttons {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 30px;
-            gap: 15px;
-}
-form button[type="submit"]#btn-submit {
-            width: auto;
-            margin-top: 0;
-            padding: 12px 30px;
-}
-.btn:disabled, form button[type="submit"]:disabled {
-            background: #cccccc;
-            color: #666;
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-            border: none;
-}
-
-#zone-pdf {
-    padding: 20px;
-    background: white;
-}
-
-.resultat-box {
-    text-align: center;
-    padding: 30px;
-    border-style: solid;
-    border-width: 2px;
-    border-radius: 15px;
-    margin-top: 20px;
-    /* La couleur de la bordure est gérée dynamiquement dans le HTML */
-}
-
-.resultat-label {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #555;
-}
-
-.resultat-score {
-    font-size: 4.5em;
-    margin: 15px 0;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-    /* La couleur du texte est gérée dynamiquement dans le HTML */
-}
-
-.resultat-progress-bg {
-    width: 100%;
-    background: #e2e8f0;
-    border-radius: 15px;
-    height: 25px;
-    margin: 20px 0;
-    overflow: hidden;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.resultat-progress-fill {
-    height: 100%;
-    transition: width 1.5s ease-out;
-    /* La largeur et la couleur de fond sont gérées dynamiquement dans le HTML */
-}
-
-.action-buttons {
-    text-align: center;
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-}
-
-.btn-green {
-    background-color: #48bb78 !important; /* Force la couleur verte par-dessus le blanc de .btn */
-    color: white !important;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-green:hover {
-    background-color: #38a169 !important; /* Vert un peu plus foncé au survol */
 }
