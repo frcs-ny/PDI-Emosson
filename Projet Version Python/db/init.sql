@@ -10,7 +10,7 @@ CREATE TABLE public.zone_inondable (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.zone_inondable(id),
-    recommandations TEXT[] -- Modifié en TEXT[] pour correspondre aux indices des réponses
+    recommandations TEXT[]
 );
 
 CREATE TABLE public.questions_logement (
@@ -21,7 +21,7 @@ CREATE TABLE public.questions_logement (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.questions_logement(id),
-    recommandations TEXT[] -- Modifié en TEXT[]
+    recommandations TEXT[]
 );
 
 CREATE TABLE public.protection_personnes (
@@ -32,7 +32,7 @@ CREATE TABLE public.protection_personnes (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.protection_personnes(id),
-    recommandations TEXT[] -- Modifié en TEXT[]
+    recommandations TEXT[]
 );
 
 INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
@@ -41,13 +41,13 @@ INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabi
 ('Zone inondable', 'Quelle est l''adresse de votre bien ?', 
  ARRAY['Zone de dissipation de l''énergie (ZDE)', 'Ecoulement préférentiel (EP)', 'Modéré (M)', 'Fort (F)', 'Très fort (TF)'], 
  ARRAY[140, 140, 80, 110, 140], FALSE, NULL, 
- ARRAY['', '', '', '', '']),
+ ARRAY['', '', '', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.']),
 
 -- Niveau du plancher
 ('Niveau du plancher', 'Avez-vous fait des travaux récemment au niveau du rez-de-chaussée ?', 
  ARRAY['Oui', 'Non'], 
  ARRAY[0, 0], FALSE, NULL, 
- ARRAY['', '']),
+ ARRAY['', 'Pour empêcher l''eau de remonter par les canalisations dans vos pièces de vie, vous pouvez installer un clapet anti-retour permanent sur votre réseau d''évacuation des eaux usées ou pluviales.']),
 
 ('Niveau du plancher', 'Quel est le niveau du premier plancher habitable de mon habitation ?', 
  ARRAY['x'], 
@@ -71,7 +71,7 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
 
 -- 2. Isolant
 ('Isolant', 'Quel matériau d''isolation est utilisé dans votre logement ?', 
- ARRAY['Fibre minérale (laine de verre)', 'Fibre végétale', 'Vermiculite', 'Plastique alvéolaire', 'Je ne sais pas (proxi : fibre minérale)'], 
+ ARRAY['Fibre minérale (laine de verre)', 'Fibre végétale', 'Vermiculite', 'Plastique alvéolaire', 'Je ne sais pas'], 
  ARRAY[10, 10, 10, 0, 10], FALSE, NULL, 
  ARRAY['Lors de vos futurs travaux ou aménagements, privilégiez l''utilisation de matériaux hydrofuges, qui sont beaucoup plus résistants à l''immersion.', 'Lors de vos futurs travaux ou aménagements, privilégiez l''utilisation de matériaux hydrofuges, qui sont beaucoup plus résistants à l''immersion.', 'Lors de vos futurs travaux ou aménagements, privilégiez l''utilisation de matériaux hydrofuges, qui sont beaucoup plus résistants à l''immersion.', '', 'Lors de vos futurs travaux ou aménagements, privilégiez l''utilisation de matériaux hydrofuges, qui sont beaucoup plus résistants à l''immersion.']),
 
@@ -89,7 +89,7 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
 
 -- 5. Revêtements muraux intérieurs
 ('Revêtements muraux intérieurs', 'Quel revêtement est posé sur vos enduits, cloisons ou portes ?', 
- ARRAY['Papier', 'Peinture', 'Textile', 'Bois', 'Carrelage collé', 'Carrelage scellé', 'Je ne sais pas (proxi : )'], 
+ ARRAY['Papier', 'Peinture', 'Textile', 'Bois', 'Carrelage collé', 'Carrelage scellé', 'Je ne sais pas'], 
  ARRAY[10, 7.5, 10, 5, 0, 0, 7.5], FALSE, NULL, 
  ARRAY['', '', '', '', '', '', '']),
 
@@ -137,13 +137,13 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
 
 -- 13. Fenêtres
 ('Fenêtres', 'En quelle matière sont faites vos fenêtres ?', 
- ARRAY['Bois + H > 1,2 m', 'PVC', 'Métal (acier, aluminium)'], 
+ ARRAY['Bois', 'PVC', 'Métal (acier, aluminium)'], 
  ARRAY[2, 0, 0], FALSE, NULL, 
  ARRAY['', '', '']),
 
 -- 14. Panneaux vitrés de grande dimension
 ('Panneaux vitrés de grande dimension', 'Votre logement dispose-t-il de baies vitrées ou de porte-fenêtres ?', 
- ARRAY['Oui + H > 0,5', 'Non'], 
+ ARRAY['Oui', 'Non'], 
  ARRAY[5, 0], FALSE, NULL, 
  ARRAY['', '']),
 
@@ -172,25 +172,25 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
  ARRAY['', '', '']),
 
 -- 19. Installation de chauffage (Dépend de la 18)
-('Installation de chauffage', 'Où est-ce que votre [chaudière sur socle, chaudière murale, brûleur de fioul] est située ?', 
+('Installation de chauffage', 'Où est-ce que votre équipement est situé ?', 
  ARRAY['Au sous-sol', 'Au niveau du rez-de-chaussée', 'Autre'], 
  ARRAY[0, 0, 0], TRUE, 18, 
  ARRAY['', '', '']),
 
 -- 20. Installation de chauffage (Dépend de la 18)
-('Installation de chauffage', 'A quelle hauteur est située votre [chaudière sur socle, chaudière murale, brûleur de fioul] ? Hauteur à apprécier à partir du rdc ou du sous-sol en fonction de sa localisation', 
+('Installation de chauffage', 'A quelle hauteur est situé cet équipement ? (en mètres, à partir du sol du niveau où il se trouve)', 
  ARRAY['x'], 
- ARRAY[10, 10, 0], TRUE, 18, 
+ ARRAY[0], TRUE, 18, 
  ARRAY['']),
 
--- 21. Installation de chauffage (Dépend de la 18)
- ('Installation de chauffage', 'A quelle hauteur est située votre [chaudière sur socle, chaudière murale, brûleur de fioul] ? Hauteur à apprécier à partir du rdc ou du sous-sol en fonction de sa localisation', 
- ARRAY['Si localisation au sous-sol', 'Si localisation au rdc et x > x de la crue de référence', 'Si localisation au rdc et x < x de la crue de référence'], 
- ARRAY[10, 10, 0], TRUE, 18, 
- ARRAY['Afin de protéger vos équipements vitaux, il est fortement conseillé de rehausser les éléments vulnérables à l''eau, comme votre chaudière, votre chauffe-eau, votre tableau électrique, ainsi que les prises et interrupteurs.', '', 'Afin de protéger vos équipements vitaux, il est fortement conseillé de rehausser les éléments vulnérables à l''eau, comme votre chaudière, votre chauffe-eau, votre tableau électrique, ainsi que les prises et interrupteurs.']),
+-- 21. Installation de chauffage (Dépend de la 18) - AUTOMATIQUE
+ ('Installation de chauffage', 'Position de l''équipement par rapport au niveau de crue calculé', 
+ ARRAY['L''équipement est situé au-dessus du niveau de crue', 'L''équipement est situé en-dessous du niveau de crue'], 
+ ARRAY[0, 10], TRUE, 18, 
+ ARRAY['', 'Afin de protéger vos équipements vitaux, il est fortement conseillé de rehausser les éléments vulnérables à l''eau (chaudière, tableau électrique, etc.) au-dessus du niveau de crue estimé.']),
 
 -- 22. Installation de chauffage
-('Installation de chauffage', 'Convecteurs électriques ? Utilisés notamment pour le chauffage de plancher ou chauffage mural', 
+('Installation de chauffage', 'Avez-vous des convecteurs électriques ? Utilisés notamment pour le chauffage de plancher ou chauffage mural', 
  ARRAY['Oui', 'Non'], 
  ARRAY[2, 0], FALSE, NULL, 
  ARRAY['', '']),
@@ -215,7 +215,7 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
 
 -- 26. Véranda (Dépend de la 24)
 ('Véranda', 'Quel est le type de vitrage utilisé ?', 
- ARRAY['Vitrage simple', 'Vitrage feuilleté', 'Je ne sais pas (proxi : )'], 
+ ARRAY['Vitrage simple', 'Vitrage feuilleté', 'Je ne sais pas'], 
  ARRAY[0.5, 0, 0.5], TRUE, 24, 
  ARRAY['', '', '']),
 

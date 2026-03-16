@@ -77,7 +77,8 @@ def questionnaire():
 
     questions = questions_zone + questions_logement + questions_protection
     for q in questions:
-        if q['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"]:
+        # On ignore les questions automatiques pour ne pas les afficher (dont la 21)
+        if q['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"] or (q['prefix'] == 'logement' and q['id'] == 21):
             continue
 
         reponses = q['reponses']  
@@ -218,7 +219,7 @@ def calcul():
             if dans_zich and zone_choisie_texte != '':
                 idx = -1
                 for i, r in enumerate(reponses):
-                    if zone_choisie_texte in r: # Cherche "Modéré" dans "Modéré (M)" par exemple
+                    if zone_choisie_texte in r: 
                         idx = i
                         break
                 
@@ -231,7 +232,6 @@ def calcul():
         # Traitement automatisé de la Hauteur d'eau
         if critere == "Hauteur d'eau potentielle":
             if dans_zich:
-                # Calcul de H (eau dans le logement) = Hauteur max de la zone - surélévation du plancher
                 H = hmax_zich - niveau_plancher
                 
                 idx_regle = -1
@@ -246,6 +246,35 @@ def calcul():
                     details.append(f"Automatique - Eau dans le logement ({H:.2f} m) : {score_calc} points")
             continue 
 
+        # Traitement automatisé de la Question 21 (Chauffage vs Crue)
+        if prefix == 'logement' and qid == 21:
+            valeur_q20 = user_answers_text.get(('logement', 20))
+            if valeur_q20 and dans_zich:
+                try:
+                    h_equipement = float(valeur_q20)
+                    
+                    # Indice 0 = au-dessus (0 pts), Indice 1 = en-dessous (10 pts)
+                    idx_auto = 1 if h_equipement < hmax_zich else 0
+                    
+                    score_calc = float(scores[idx_auto])
+                    score_total += score_calc
+                    
+                    texte_reponse = reponses[idx_auto]
+                    texte_reco = recommandations[idx_auto] if recommandations and len(recommandations) > idx_auto else ""
+                    
+                    details.append(f"Automatique - Chauffage : {texte_reponse} (Equipement: {h_equipement}m vs Crue: {hmax_zich:.2f}m)")
+                    
+                    rappel_qr.append({
+                        'question': q['question'],
+                        'reponse': texte_reponse,
+                        'recommandation': texte_reco
+                    })
+                    
+                    if texte_reco and texte_reco not in recommandations_groupees[prefix]:
+                        recommandations_groupees[prefix].append(texte_reco)
+                except ValueError:
+                    pass
+            continue
 
         # Traitement normal pour les autres questions
         input_name = f"rep_{prefix}_{qid}"
@@ -257,9 +286,11 @@ def calcul():
             
             if len(reponses) == 1 and reponses[0] == 'x':
                 try:
-                    niveau_plancher = float(user_answer)
-                    texte_reponse = f"{niveau_plancher} m"
-                    details.append(f"{critere} : {niveau_plancher} m")
+                    reponse_float = float(user_answer)
+                    if prefix == 'zone' and critere == 'Niveau du plancher':
+                        niveau_plancher = reponse_float
+                    texte_reponse = f"{reponse_float} m"
+                    details.append(f"{critere} : {reponse_float} m")
                     texte_reco = recommandations[0] if recommandations and len(recommandations) > 0 else ""
                 except ValueError:
                     pass
@@ -282,7 +313,6 @@ def calcul():
                     'recommandation': texte_reco
                 })
                 
-                # Ajout dans la bonne catégorie
                 if texte_reco and texte_reco not in recommandations_groupees[prefix]:
                     recommandations_groupees[prefix].append(texte_reco)
 
@@ -290,7 +320,7 @@ def calcul():
     # Préparation de la liste finale pour le template
     recommandations_finales = []
     for pref, recos in recommandations_groupees.items():
-        if recos: # Ne garde que les catégories qui ont au moins 1 recommandation
+        if recos: 
             recommandations_finales.append({
                 'titre': noms_categories[pref],
                 'recos': recos
