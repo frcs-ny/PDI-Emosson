@@ -102,3 +102,4 @@ function initMap(lat, lon, geomList) {
 
     setTimeout(function() { map.invalidateSize(); }, 100);
 }
+
