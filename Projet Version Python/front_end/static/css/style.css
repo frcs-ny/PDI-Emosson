@@ -518,17 +518,10 @@ form button[type="submit"]#btn-submit {
 }
 .form-select {
     margin-bottom: 20px;
-    padding: 15px;
-    background-color: #f4f4f4;
+    padding: 20px;
+    background-color: #ffffff; /* Fond blanc comme sur votre image */
     border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-.question-select {
-    width: 500px;
-    max-width: 100%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Petite ombre légère */
 }
 /* ------------------------------------- */
 /* RESPONSIVE DESIGN */
