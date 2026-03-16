@@ -172,21 +172,37 @@ def calcul():
             details.append(f"⚠️ Erreur lors de l'analyse spatiale de l'adresse. ({e})")
 
 
-    # 1. Récupération des réponses saisies
+    # 1. Récupération des réponses saisies ET sauvegarde en BDD
     user_answers_text = {}
+    cur = conn.cursor() # Création d'un curseur pour l'insertion
+    
     for q in all_questions_db:
         input_name = f"rep_{q['prefix']}_{q['id']}"
         user_answer = request.args.get(input_name)
         
         if user_answer is not None and str(user_answer).strip() != '':
+            texte_a_sauvegarder = ""
+            
             if len(q['reponses']) == 1 and q['reponses'][0] == 'x':
                 user_answers_text[(q['prefix'], q['id'])] = user_answer
+                texte_a_sauvegarder = str(user_answer)
             else:
                 try:
                     index = int(user_answer)
                     user_answers_text[(q['prefix'], q['id'])] = q['reponses'][index]
+                    texte_a_sauvegarder = q['reponses'][index]
                 except (ValueError, IndexError):
                     pass
+            
+            # Sauvegarde de la réponse dans la nouvelle table
+            if texte_a_sauvegarder:
+                try:
+                    cur.execute(
+                        "INSERT INTO public.reponses_utilisateurs (id_question, categorie, reponse_donnee) VALUES (%s, %s, %s)",
+                        (q['id'], q['prefix'], texte_a_sauvegarder)
+                    )
+                except Exception as e:
+                    print(f"Erreur d'insertion en BDD: {e}")
 
     # 2. Calcul du score
     score_total = 0.0
@@ -353,6 +369,60 @@ def calcul():
                        geom=geom_json,
                        recommandations_finales=recommandations_finales,
                        rappel_qr=rappel_qr)
+
+
+@app.route('/statistiques')
+def statistiques():
+    # Par défaut, on affiche les stats de la question 1 de la catégorie "logement"
+    question_id = request.args.get('id', 1, type=int)
+    categorie = request.args.get('categorie', 'logement')
+
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    
+    # Récupération de la question exacte pour l'afficher en titre
+    if categorie == 'logement':
+        table_name = "public.questions_logement"
+    elif categorie == 'protection':
+        table_name = "public.protection_personnes"
+    else:
+        table_name = "public.zone_inondable"
+        
+    question_texte = "Question introuvable"
+    try:
+        cur.execute(f"SELECT question FROM {table_name} WHERE id = %s", (question_id,))
+        result = cur.fetchone()
+        if result:
+            question_texte = result['question']
+            
+        # Requête pour calculer les statistiques (compte et pourcentage)
+        query = """
+            SELECT 
+                reponse_donnee AS reponse,
+                COUNT(*) AS compte,
+                SUM(COUNT(*)) OVER() AS total,
+                ROUND((COUNT(*) * 100.0) / SUM(COUNT(*)) OVER(), 1) AS pourcentage
+            FROM 
+                public.reponses_utilisateurs
+            WHERE 
+                categorie = %s AND id_question = %s
+            GROUP BY 
+                reponse_donnee
+            ORDER BY 
+                compte DESC;
+        """
+        cur.execute(query, (categorie, question_id))
+        stats = cur.fetchall()
+    except Exception as e:
+        print(f"Erreur SQL: {e}")
+        stats = []
+
+    return render_template('statistiques.html', 
+                           stats=stats, 
+                           question_texte=question_texte, 
+                           id=question_id, 
+                           categorie=categorie,
+                           now=datetime.now())
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

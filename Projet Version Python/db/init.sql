@@ -1,6 +1,7 @@
 DROP TABLE IF EXISTS public.zone_inondable CASCADE;
 DROP TABLE IF EXISTS public.questions_logement CASCADE;
 DROP TABLE IF EXISTS public.protection_personnes CASCADE;
+DROP TABLE IF EXISTS public.reponses_utilisateurs CASCADE;
 
 CREATE TABLE public.zone_inondable (
     id SERIAL PRIMARY KEY,
@@ -33,6 +34,14 @@ CREATE TABLE public.protection_personnes (
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.protection_personnes(id),
     recommandations TEXT[]
+);
+
+CREATE TABLE public.reponses_utilisateurs (
+    id SERIAL PRIMARY KEY,
+    id_question INTEGER NOT NULL,
+    categorie VARCHAR(50) NOT NULL,
+    reponse_donnee TEXT NOT NULL,
+    date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
@@ -256,3 +265,4 @@ INSERT INTO public.protection_personnes (critere, question, reponses, scores_vul
  ARRAY['Oui', 'Non', 'Je n''ai pas de piscine'], 
  ARRAY[0, 20, 0], FALSE, NULL, 
  ARRAY['', 'Pour assurer la sécurité des secouristes en cas d''inondation, il est préconisé d''installer une barrière périphérique autour de votre piscine ou bassin. Assurez-vous qu''elle mesure au moins 1,10 mètre de haut afin de rester visible même sous 1 mètre d''eau.', '']);
+
