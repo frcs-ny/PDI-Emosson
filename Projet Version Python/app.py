@@ -3,6 +3,7 @@ from datetime import datetime
 import psycopg2
 import psycopg2.extras
 import os
+import json
 
 from api_georisques import recuperer_coordonnees, est_dans_une_zone_inondable
 from estdansunezich import adresse_vers_coordonnees, recuperer_info_toutes_les_station, trouver_station_plus_proche, recuperer_geom_zich, est_dans_une_zich
@@ -125,7 +126,7 @@ def calcul():
             stations = recuperer_info_toutes_les_station()
             code_station, nom_station = trouver_station_plus_proche(stations, lon, lat)
             hauteur_max_station, geom = recuperer_geom_zich(code_station)
-            dans_zich, hmin_zich, hmax_zich, geometry = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom)
+            dans_zich, hmin_zich, hmax_zich, geom = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom)
             
             if dans_zich:
                 # 3. Application de la classification du tableau PPRI
@@ -251,12 +252,21 @@ def calcul():
     score_cent = max(0, min(100, int(round(score_cent))))
     hue = max(0, 120 - (score_cent * 1.2))
     couleur_score = f"hsl({hue}, 70%, 45%)"
+    
+    geom_json = json.dumps(geom) if geom else 'null'
 
     return render_template('calcul.html', 
-                           score_total=round(score_total, 2),
-                           score_cent=score_cent,
-                           couleur_score=couleur_score,
-                           details=details)
+                       score_total=round(score_total, 2),
+                       score_cent=score_cent,
+                       couleur_score=couleur_score,
+                       details=details,
+                       lon=lon,          
+                       lat=lat,     
+                       adresse=adresse_complete,   
+                       dans_zich=dans_zich,
+                       hmax_zich=round(hmax_zich, 2) if hmax_zich else 0, 
+                       zone_choisie_texte=zone_choisie_texte,
+                       geom=geom_json)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

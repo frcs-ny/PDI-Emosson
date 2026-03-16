@@ -209,7 +209,7 @@ def est_dans_une_zich(code_station, lon, lat, hauteur, geom):
         if polygone.contains(point):
             return True, g["hauteur_min_m"], g["hauteur_max_m"], geom
     
-    return False, None, None, None
+    return False, None, None, geom
 
 
 
@@ -236,7 +236,7 @@ if __name__ == "__main__":
     
     dans_zich, hmin, hmax, geom = est_dans_une_zich(code_station, lon, lat, hauteur, geom )
     
-    print(dans_zich, hmin, hmax, geom)
+    print(dans_zich, hmin, hmax)
 
     
     afficher_geom_zich(hauteur, geom, lon, lat, nom_station)

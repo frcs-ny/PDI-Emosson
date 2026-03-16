@@ -4,17 +4,19 @@
     <meta charset="UTF-8">
     <title>Résultat - Emosson</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/css_calcul_carte.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
-        
+
         <div id="zone-pdf">
             <h1>Résultat de votre évaluation</h1>
-            
+
             <div class="resultat-box" style="border-color: {{ couleur_score }};">
                 <p class="resultat-label">Votre niveau de vulnérabilité :</p>
-                
+
                 <h2 class="resultat-score" style="color: {{ couleur_score }};">
                     {{ score_cent }}/100
                 </h2>
@@ -23,6 +25,21 @@
                     <div class="resultat-progress-fill" style="width: {{ score_cent }}%; background-color: {{ couleur_score }};"></div>
                 </div>
             </div>
+
+            <h2 class="carte-titre">Carte de l'aléa inondation</h2>
+
+            {% if dans_zich %}
+            <p class="carte-sous-titre carte-danger">
+                L'adresse analysée se situe dans une zone soumise à un risque d'inondation.
+                Hauteur de submersion estimée : {{ hmax_zich }} m — Aléa : {{ zone_choisie_texte }}.
+            </p>
+            {% else %}
+            <p class="carte-sous-titre carte-ok">
+                L'adresse analysée ne se situe pas dans une zone inondable pour le scénario extrême étudié.
+            </p>
+            {% endif %}
+
+            <div id="map"></div>
 
         </div>
         <br>
@@ -34,23 +51,22 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='JS/js_calcul_carte.js') }}"></script>
     <script>
         document.getElementById('btn-telecharger').addEventListener('click', function () {
-            // On cible la zone à convertir en PDF
             var element = document.getElementById('zone-pdf');
-            
-            // Options de configuration du PDF
             var opt = {
-              margin:       10,
-              filename:     'Diagnostic_Vulnerabilite_Emosson.pdf',
-              image:        { type: 'jpeg', quality: 0.98 },
-              html2canvas:  { scale: 2 },
-              jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin:       10,
+                filename:     'Diagnostic_Vulnerabilite_Emosson.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-
-            // Lancement de la génération
             html2pdf().set(opt).from(element).save();
         });
+
+        initMap({{ lat }}, {{ lon }}, {{ geom | safe }});
     </script>
 </body>
 </html>
