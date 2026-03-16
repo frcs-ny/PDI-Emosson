@@ -304,7 +304,7 @@ def calcul():
         
     score_cent = max(0, min(100, int(round(score_cent))))
     hue = max(0, 120 - (score_cent * 1.2))
-    couleur_score = f"hsl({hue}, 70%, 45%)"
+    couleur_score = f"hsl({hue}, 100%, 40%)"
     
     geom_json = json.dumps(geom) if geom else 'null'
 
