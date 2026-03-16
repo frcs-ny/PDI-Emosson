@@ -65,13 +65,13 @@ header h1 {
     justify-content: center;     
     align-items: center;     
     gap: 10%;      
-    padding: 10% 10%;     
+    padding: 20px 20px 0 20px;     
     flex-wrap: wrap;     
     font-size: 1.2rem;                
     font-family: 'Open Sauce', sans-serif;       
     font-weight: 500;
+    flex: none !important; /* Le !important force cette règle à gagner */
 }
-
 .btn:disabled, form button[type="submit"]:disabled {
     background: #cccccc;
     color: #666;
@@ -329,15 +329,12 @@ form button[type="submit"]#btn-submit {
 }
 
 .progress_bar_container {
-    position: fixed;
-    top: 350px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    margin: 0 auto;
     width: min(800px, 90vw);
     height: 15px;
     background: #e2e8f0;
     border-radius: 999px;
-    z-index: 999;
     overflow: hidden;
 }
 
