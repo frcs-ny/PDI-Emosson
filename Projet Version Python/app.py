@@ -125,7 +125,7 @@ def calcul():
             stations = recuperer_info_toutes_les_station()
             code_station, nom_station = trouver_station_plus_proche(stations, lon, lat)
             hauteur_max_station, geom = recuperer_geom_zich(code_station)
-            dans_zich, hmin_zich, hmax_zich = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom)
+            dans_zich, hmin_zich, hmax_zich, geometry = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom)
             
             if dans_zich:
                 # 3. Application de la classification du tableau PPRI
