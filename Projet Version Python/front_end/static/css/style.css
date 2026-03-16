@@ -60,8 +60,6 @@ header h1 {
     color: rgb(42, 106, 138);
 }
 
-<<<<<<< HEAD
-=======
 .nav-container {
     display: flex;
     justify-content: center;
@@ -71,7 +69,6 @@ header h1 {
     flex-wrap: wrap;
 }
 
->>>>>>> 8e35788c459866f7316545f89d6704666ee6035a
 .btn:disabled, form button[type="submit"]:disabled {
     background: #cccccc;
     color: #666;
@@ -253,8 +250,6 @@ form input[type="number"]::-webkit-inner-spin-button {
     margin: 0;
 }
 
-<<<<<<< HEAD
-=======
 form input[type="number"]:hover, form input[type="text"]:hover {
     border-color: rgb(16, 181, 222);
     background: white;
@@ -267,7 +262,6 @@ form input[type="number"]:focus, form input[type="text"]:focus {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
->>>>>>> 8e35788c459866f7316545f89d6704666ee6035a
 form button[type="submit"],
 form input[type="submit"] {
     width: 100%;
