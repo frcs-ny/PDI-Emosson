@@ -16,11 +16,9 @@
 
             <div class="resultat-box" style="border-color: {{ couleur_score }};">
                 <p class="resultat-label">Votre niveau de vulnérabilité :</p>
-
                 <h2 class="resultat-score" style="color: {{ couleur_score }};">
                     {{ score_cent }}/100
                 </h2>
-
                 <div class="resultat-progress-bg">
                     <div class="resultat-progress-fill" style="width: {{ score_cent }}%; background-color: {{ couleur_score }};"></div>
                 </div>
@@ -28,15 +26,29 @@
 
             <h2 class="carte-titre">Carte de l'aléa inondation</h2>
 
-            {% if dans_zich %}
-            <p class="carte-sous-titre carte-danger">
-                L'adresse analysée se situe dans une zone soumise à un risque d'inondation.
-                Hauteur de submersion estimée : {{ hmax_zich }} m — Aléa : {{ zone_choisie_texte }}.
-            </p>
+           {% if not dans_zich %}
+            <div class="alerte-barre alerte-vert">
+                <div class="alerte-titre-principal">HORS ZONE INONDABLE</div>
+                <div class="alerte-description">Votre logement n'est pas exposé à un risque d'inondation.</div>
+            </div>
+            {% elif hmax_zich <= 1.0 %}
+            <div class="alerte-barre alerte-jaune">
+                <div class="alerte-titre-principal">ZONE INONDABLE</div>
+                <div class="alerte-description">Votre logement est exposé à un risque d'inondation.</div>
+                <div class="alerte-valeur">{{ hmax_zich }} m — {{ zone_choisie_texte }}</div>
+            </div>
+            {% elif hmax_zich <= 2.5 %}
+            <div class="alerte-barre alerte-orange">
+                <div class="alerte-titre-principal">ZONE INONDABLE</div>
+                <div class="alerte-description">Votre logement est exposé à un risque d'inondation.</div>
+                <div class="alerte-valeur">{{ hmax_zich }} m — {{ zone_choisie_texte }}</div>
+            </div>
             {% else %}
-            <p class="carte-sous-titre carte-ok">
-                L'adresse analysée ne se situe pas dans une zone inondable pour le scénario extrême étudié.
-            </p>
+            <div class="alerte-barre alerte-rouge">
+                <div class="alerte-titre-principal">ZONE INONDABLE</div>
+                <div class="alerte-description">Votre logement est exposé à un risque d'inondation.</div>
+                <div class="alerte-valeur">{{ hmax_zich }} m — {{ zone_choisie_texte }}</div>
+            </div>
             {% endif %}
 
             <div id="map"></div>

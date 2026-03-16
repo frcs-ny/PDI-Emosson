@@ -115,6 +115,7 @@ def calcul():
     dans_zich = False
     hmax_zich = 0.0
     zone_choisie_texte = ""
+    geom = None
 
     # --- NOUVEAU : Récupération des données GPS et ZICH ---
     if adresse_complete:
