@@ -60,13 +60,16 @@ header h1 {
     color: rgb(42, 106, 138);
 }
 
-.nav-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 120px; 
-    padding: 15px 20px;
-    flex-wrap: wrap;
+.nav-container {     
+    display: flex;     
+    justify-content: center;     
+    align-items: center;     
+    gap: 10%;      
+    padding: 10% 10%;     
+    flex-wrap: wrap;     
+    font-size: 1.2rem;                
+    font-family: 'Open Sauce', sans-serif;       
+    font-weight: 500;
 }
 
 .btn:disabled, form button[type="submit"]:disabled {
