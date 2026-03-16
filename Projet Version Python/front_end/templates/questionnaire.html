@@ -10,17 +10,27 @@
 <body>
     <header>
         <div class="header-container">
-            <img src="../static/img/castor_emosson.png" alt="logo">
-            <h1>Emosson - Diagnostic</h1>
-            <a href="/accueil" class="btn">Retourner à l'accueil</a>
+            <h1>Emosson</h1>
         </div>
     </header>
+
+    <div class="container nav-container">
+        <a href="../accueil" class="btn">Accueil</a>
+        <a href="../questionnaire" class="btn">Accéder au questionnaire</a>
+        <a href="../qui_sommes_nous" class="btn">Qui sommes-nous ?</a>
+        <a href="../actualite" class="btn">Actualité</a>
+    </div>
 
     <div class="progress_bar_container">
         <div class="progress_bar" id="globalProgress"></div>
     </div>
     
+    
     <div class="container">
+        <section class="section">
+            <h2>Questionnaire</h2>        
+        </section>
+
         <form action="/calcul" method="get" id="diagnostic_form">
             <div id="form-steps">
                 {% for etape in etapes %}
@@ -161,7 +171,7 @@
             } else {
                 progressPct = 100;
             }
-            progressBar.style.height = progressPct + '%';
+            progressBar.style.width = progressPct + '%';
 
             // Bouton précédent
             bouton_precedent.style.display = (currentActiveIndex <= 1) ? 'none' : 'inline-block';
