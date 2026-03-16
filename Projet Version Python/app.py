@@ -56,6 +56,13 @@ def get_questions():
 def accueil():
     return render_template('accueil.html', now=datetime.now())
 
+@app.route('/actualite')
+def actualite():
+    return render_template('actualite.html', now=datetime.now())
+
+@app.route('/qui_sommes_nous')
+def qui_sommes_nous():
+    return render_template('qui_sommes_nous.html', now=datetime.now())
 
 @app.route('/questionnaire')
 def questionnaire():
