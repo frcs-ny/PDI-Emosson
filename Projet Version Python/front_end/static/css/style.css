@@ -554,3 +554,169 @@ form button[type="submit"]#btn-submit {
         display: none;
     }
 }
+
+/* ========================================= */
+/* STYLES SPÉCIFIQUES POUR LE RENDU PDF      */
+/* ========================================= */
+
+#zone-pdf {
+    padding: 30px;
+    background: white;
+    color: #333;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: block; /* Évite les comportements flex indésirables d'html2pdf */
+}
+
+/* En-tête Bilan (Titre + Score côte à côte) */
+.pdf-header-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #3498db;
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+}
+
+.header-bilan {
+    text-align: left;
+    flex: 1;
+}
+
+.header-bilan h1 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.user-info {
+    font-size: 1.1em;
+    color: #555;
+}
+
+/* Score plus compact */
+.score-container {
+    text-align: center;
+    margin: 0 0 0 20px;
+}
+
+.cercle-score {
+    width: 110px;       
+    height: 110px;      
+    border-radius: 50%;
+    border: 8px solid; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2em;     
+    font-weight: bold;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    margin: 0 auto;
+}
+
+.score-max {
+    font-size: 0.4em;
+    color: #888;
+    margin-left: 2px;
+}
+
+.score-label {
+    margin-top: 8px;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #555;
+    text-transform: uppercase;
+}
+
+/* Section Carte */
+.map-pdf-container {
+    height: 300px; /* Force une hauteur raisonnable pour le PDF */
+    width: 100%;
+    margin-bottom: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    border: 1px solid #ddd;
+}
+
+.section-title {
+    color: #2c3e50;
+    font-size: 1.4rem;
+    margin-top: 30px;
+    margin-bottom: 15px;
+    border-left: 5px solid #3498db;
+    padding-left: 12px;
+}
+
+/* Recommandations : Agencement texte/image */
+.reco-group {
+    margin-bottom: 25px;
+}
+
+.reco-category-title {
+    color: #448dcd;
+    font-size: 1.2em;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+}
+
+.reco-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.reco-item {
+    background: #f8f9fa;
+    border-left: 4px solid #48bb78;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    flex-wrap: wrap; /* Permet à l'image de passer en dessous si l'écran est petit, mais côte à côte si possible */
+    align-items: center;
+    gap: 15px;
+}
+
+.reco-text {
+    flex: 1;
+    min-width: 200px;
+}
+
+.reco-image {
+    height: 120px; /* Image beaucoup plus petite et discrète */
+    width: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Tableau d'historique */
+.rappel-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 0.9em; /* Police légèrement réduite pour le tableau */
+}
+
+.rappel-table th {
+    background-color: #2c3e50;
+    color: white;
+    padding: 10px;
+    text-align: left;
+}
+
+.rappel-table td {
+    border: 1px solid #e2e8f0;
+    padding: 10px;
+}
+
+.rappel-table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+/* Éviter les coupures disgracieuses au milieu d'un bloc lors du saut de page */
+.no-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
