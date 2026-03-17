@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistiques - Emosson</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <h1>Emosson</h1>
+        </div>
+    </header>
+
+    <div class="container nav-container">
+        <a href="/accueil" class="btn">Accueil</a>
+        <a href="/questionnaire" class="btn">Accéder au questionnaire</a>
+        <a href="/statistiques" class="btn">Statistiques</a>
+        <a href="/qui_sommes_nous" class="btn">Qui sommes-nous ?</a>
+        <a href="/actualite" class="btn">Actualité</a>
+    </div>
+
+    <div class="container">
+        <section class="section">
+            <h2>Statistiques des réponses</h2>
+            
+            <div class="form-select">
+                <form action="/statistiques" method="get" style="display: flex; align-items: flex-end; gap: 15px; width: 100%; flex-wrap: wrap;">
+                    
+                    <div>
+                        <label for="categorie" style="display: block; margin-bottom: 5px;">Catégorie :</label>
+                        <select name="categorie" id="categorie" class="step-input" style="width: auto; margin-bottom: 0;">
+                            <option value="logement" {% if categorie == 'logement' %}selected{% endif %}>Logement</option>
+                            <option value="zone" {% if categorie == 'zone' %}selected{% endif %}>Zone inondable</option>
+                            <option value="protection" {% if categorie == 'protection' %}selected{% endif %}>Protection</option>
+                        </select>
+                    </div>
+                    
+                    <div style="flex-grow: 1; min-width: 250px;">
+                        <label for="id" style="display: block; margin-bottom: 5px;">Question :</label>
+                        <select name="id" id="question_select" class="step-input" style="width: 100%; margin-bottom: 0;" required>
+                            </select>
+                    </div>
+                    
+                    <div>
+                        <button type="submit" class="btn" style="padding: 10px 20px; margin-bottom: 0;">Analyser</button>
+                    </div>
+                </form>
+            </div>
+
+            <h3 style="margin-top: 30px; color: #2c3e50;">Question analysée : <em>"{{ question_texte }}"</em></h3>
+
+            {% if stats %}
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Réponse donnée</th>
+                        <th>Nombre de fois choisie</th>
+                        <th>Pourcentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in stats %}
+                    <tr>
+                        <td>{{ row.reponse }}</td>
+                        <td>{{ row.compte }} (sur {{ row.total }})</td>
+                        <td><strong>{{ row.pourcentage }} %</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="margin-top: 20px; color: #e74c3c;">Aucune donnée disponible pour cette question ou aucun utilisateur n'y a encore répondu.</p>
+            {% endif %}
+
+        </section>
+    </div>
+    
+    <footer>
+        <p>&copy; {{ now.year }} Emosson. Tous droits réservés.</p>
+    </footer>
+
+    <script>
+
+        const questionsData = {
+            'logement': [
+                {% for q in questions_logement %}
+                { id: {{ q.id }}, text: {{ (q.id | string + " - " + q.question) | tojson }} },
+                {% endfor %}
+            ],
+            'zone': [
+                {% for q in questions_zone %}
+                { id: {{ q.id }}, text: {{ (q.id | string + " - " + q.question) | tojson }} },
+                {% endfor %}
+            ],
+            'protection': [
+                {% for q in questions_protection %}
+                { id: {{ q.id }}, text: {{ (q.id | string + " - " + q.question) | tojson }} },
+                {% endfor %}
+            ]
+        };
+
+        const catSelect = document.getElementById('categorie');
+        const qSelect = document.getElementById('question_select');
+        const currentQId = {{ id }}; // L'ID actuellement sélectionné envoyé par Flask
+
+        // Fonction pour mettre à jour la liste des questions
+        function updateQuestions() {
+            const cat = catSelect.value;
+            const qs = questionsData[cat] || [];
+            
+            // On vide le menu déroulant
+            qSelect.innerHTML = '';
+            
+            // On le remplit avec les bonnes questions
+            qs.forEach(q => {
+                const opt = document.createElement('option');
+                opt.value = q.id;
+                
+                // Tronquer le texte si c'est trop long (esthétique)
+                let texteAffiche = q.text;
+                if(texteAffiche.length > 80) {
+                    texteAffiche = texteAffiche.substring(0, 80) + '...';
+                }
+                opt.textContent = texteAffiche;
+                
+                // Pré-sélectionner la question en cours d'analyse
+                if (q.id === currentQId) {
+                    opt.selected = true;
+                }
+                
+                qSelect.appendChild(opt);
+            });
+        }
+
+        // Dès qu'on change la catégorie, on met à jour les questions et on sélectionne la 1ère
+        catSelect.addEventListener('change', function() {
+            updateQuestions();
+            if(qSelect.options.length > 0) {
+                qSelect.selectedIndex = 0; 
+            }
+        });
+
+        // Initialisation au chargement de la page
+        updateQuestions();
+    </script>
+</body>
+</html>
