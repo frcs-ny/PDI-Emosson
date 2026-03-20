@@ -131,9 +131,12 @@
               pagebreak:    { mode: ['css', 'avoid-all'] } // Gère les sauts de page proprement
             };
 
-            html2pdf().set(opt).from(element).save();
+            html2pdf().set(opt).from(element).save().then(function() {
+                window.location.href = "/avis?mode=fin_parcours";
+            });
         });
-
+    </script>
+    <script>
         // Initialisation de la carte Leaflet
         // L'objet geom est passé depuis Flask en JSON sécurisé
         initMap({{ lat }}, {{ lon }}, {{ geom | safe }});

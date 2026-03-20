@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
 import psycopg2
 import psycopg2.extras
@@ -437,6 +437,38 @@ def statistiques():
                            questions_protection=questions_protection,
                            now=datetime.now())
 
+@app.route('/avis', methods=['GET', 'POST'])
+def avis():
+    # On récupère le mode depuis l'URL (GET)
+    mode = request.args.get('mode', '')
+    
+    if request.method == 'POST':
+        commentaire = request.form.get('commentaire')
+        note = request.form.get('note')
+        # On récupère le mode depuis le formulaire (POST)
+        mode_form = request.form.get('mode', '')
+        
+        if commentaire and note:
+            try:
+                cur = conn.cursor()
+                cur.execute(
+                    "INSERT INTO public.avis (commentaire, note) VALUES (%s, %s)",
+                    (commentaire.strip(), int(note))
+                )
+            except Exception as e:
+                print(f"Erreur d'insertion d'avis: {e}")
+                
+        # Si on vient de la fin du parcours, on renvoie à l'accueil après soumission
+        if mode_form == 'fin_parcours':
+            return redirect(url_for('accueil'))
+        return redirect(url_for('avis'))
+
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    cur.execute("SELECT commentaire, note, date_avis FROM public.avis ORDER BY date_avis DESC")
+    liste_avis = cur.fetchall()
+
+    # On passe la variable "mode" au template
+    return render_template('avis.html', liste_avis=liste_avis, now=datetime.now(), mode=mode)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

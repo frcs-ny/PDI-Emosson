@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS public.zone_inondable CASCADE;
 DROP TABLE IF EXISTS public.questions_logement CASCADE;
 DROP TABLE IF EXISTS public.protection_personnes CASCADE;
 DROP TABLE IF EXISTS public.reponses_utilisateurs CASCADE;
+DROP TABLE IF EXISTS public.avis CASCADE;
 
 CREATE TABLE public.zone_inondable (
     id SERIAL PRIMARY KEY,
@@ -42,6 +43,13 @@ CREATE TABLE public.reponses_utilisateurs (
     categorie VARCHAR(50) NOT NULL,
     reponse_donnee TEXT NOT NULL,
     date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.avis (
+    id SERIAL PRIMARY KEY,
+    commentaire TEXT NOT NULL,
+    note INTEGER CHECK (note >= 1 AND note <= 5) NOT NULL,
+    date_avis TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
