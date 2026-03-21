@@ -106,12 +106,13 @@
         const totalSteps = steps.length;
         let currentStep = 0;
 
-        // Fonction qui détermine si une question doit être affichée ou sautée
+        
         function isStepActive(index) {
+            //détermine si une question doit être affichée ou sautée
             const step = steps[index];
             const parentName = step.getAttribute('data-parent');
             
-            // Si pas de parent, la question est toujours active
+            //Si pas de parent, la question est toujours active
             if (!parentName) return true;
 
             const parentInput = document.querySelector('[name="' + parentName + '"]');
@@ -123,8 +124,6 @@
                 
                 const valText = selectedOption.text.trim().toLowerCase();
                 
-                // --- RÈGLE GÉNÉRALE ---
-                // Si la réponse parent est "Non" ou "Je n'ai pas de cuves", on masque.
                 if (valText === 'non' || valText === "je n'ai pas de cuves") {
                     return false;
                 }
@@ -132,20 +131,20 @@
             return true;
         }
 
-        // Met à jour l'affichage de l'étape courante, de la barre de progression et des boutons
+        //MISE à jour de L'UI
         function updateUI() {
             let activeStepsCount = 0;
             let currentActiveIndex = 0;
             let lastActiveIndex = -1;
 
-            // Déterminer le total des questions actives (pour la barre de progression)
+            
             steps.forEach(function(step, i) {
                 const input = step.querySelector('.step-input');
                 const isActive = isStepActive(i);
 
                 if (!isActive) {
-                    input.removeAttribute('required'); // Pour ne pas bloquer le bouton valider
-                    step.style.display = 'none'; // Masquer complètement l'élément
+                    input.removeAttribute('required'); 
+                    step.style.display = 'none'; 
                     step.classList.remove('unlocking');
                     step.classList.add('locked');
                 } else {
@@ -165,7 +164,7 @@
                 }
             });
 
-            // Barre de progression dynamique basée uniquement sur les étapes visibles
+            //barre de progresssion
             let progressPct = 0;
             if (activeStepsCount > 1) {
                 progressPct = ((currentActiveIndex - 1) / (activeStepsCount - 1)) * 100;
@@ -174,10 +173,10 @@
             }
             progressBar.style.width = progressPct + '%';
 
-            // Bouton précédent
+          
             bouton_precedent.style.display = (currentActiveIndex <= 1) ? 'none' : 'inline-block';
 
-            // Gérer "Suivant" vs "Calculer"
+            //afficher le bouton calculer à la fin
             if (currentStep === lastActiveIndex) {
                 bouton_suivant.style.display = 'none';
                 bouton_valider.style.display = 'inline-block';
@@ -195,7 +194,7 @@
 
             bouton_suivant.disabled = !isValid;
 
-            // Savoir si nous sommes à la dernière étape active
+            
             let lastActiveIndex = -1;
             for (let i = totalSteps - 1; i >= 0; i--) {
                 if (isStepActive(i)) {
@@ -209,12 +208,12 @@
             }
         }
 
-        // Permet de passer à la prochaine étape *active*
+        
         function goNext() {
             let nextIndex = currentStep + 1;
-            // On saute les questions qui ne remplissent pas la condition
+           
             while (nextIndex < totalSteps && !isStepActive(nextIndex)) {
-                // On s'assure de vider les champs ignorés
+                
                 const input = steps[nextIndex].querySelector('.step-input');
                 if (input) input.value = "";
                 nextIndex++;
@@ -225,7 +224,7 @@
             }
         }
 
-        // Permet de revenir à la précédente étape *active*
+        //bouton précédent
         function goPrev() {
             let prevIndex = currentStep - 1;
             while (prevIndex >= 0 && !isStepActive(prevIndex)) {
@@ -237,7 +236,7 @@
             }
         }
 
-        // Gestionnaires d'évènements
+        
         steps.forEach(function(step) {
             const input = step.querySelector('.step-input');
 
@@ -248,7 +247,7 @@
                 const isSelect = input.tagName.toLowerCase() === 'select';
                 if (isSelect && input.checkValidity()) {
                     setTimeout(function() {
-                        // Trouver le dernier index actif
+                        
                         let lastActiveIndex = -1;
                         for (let i = totalSteps - 1; i >= 0; i--) {
                             if (isStepActive(i)) { lastActiveIndex = i; break; }
@@ -256,7 +255,7 @@
                         if (currentStep < lastActiveIndex) {
                             goNext();
                         }
-                    }, 300); // petit délai pour fluidité
+                    }, 300); 
                 }
             });
 
@@ -280,7 +279,7 @@
         bouton_suivant.addEventListener('click', goNext);
         bouton_precedent.addEventListener('click', goPrev);
 
-        // Initialisation de l'affichage
+        //Afficher
         updateUI();
     });
     </script>
