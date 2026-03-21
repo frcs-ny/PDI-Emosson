@@ -212,9 +212,9 @@ footer {
     margin-top: auto; 
 }
 
-/* ------------------------------------- */
+
 /* FORMULAIRE (QUESTIONNAIRE) */
-/* ------------------------------------- */
+
 
 form {
     background: white;
@@ -378,9 +378,9 @@ form button[type="submit"]#btn-submit {
 }
 
 
-/* ------------------------------------- */
+
 /* BILAN & RESULTATS */
-/* ------------------------------------- */
+
 
 #zone-pdf {
     padding: 20px;
@@ -585,9 +585,9 @@ form button[type="submit"]#btn-submit {
     }
 }
 
-/* ========================================= */
+
 /* STYLES SPÉCIFIQUES POUR LE RENDU PDF      */
-/* ========================================= */
+
 
 #zone-pdf {
     padding: 30px;
@@ -625,7 +625,7 @@ form button[type="submit"]#btn-submit {
     color: #555;
 }
 
-/* Score plus compact */
+
 .score-container {
     text-align: center;
     margin: 0 0 0 20px;
@@ -679,7 +679,7 @@ form button[type="submit"]#btn-submit {
     padding-left: 12px;
 }
 
-/* Recommandations : Agencement texte/image */
+
 .reco-group {
     margin-bottom: 25px;
 }
@@ -704,7 +704,7 @@ form button[type="submit"]#btn-submit {
     padding: 15px;
     margin-bottom: 15px;
     display: flex;
-    flex-wrap: wrap; /* Permet à l'image de passer en dessous si l'écran est petit, mais côte à côte si possible */
+    flex-wrap: wrap; 
     align-items: center;
     gap: 15px;
 }
@@ -715,7 +715,7 @@ form button[type="submit"]#btn-submit {
 }
 
 .reco-image {
-    height: 120px; /* Image beaucoup plus petite et discrète */
+    height: 120px; 
     width: auto;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
@@ -726,7 +726,7 @@ form button[type="submit"]#btn-submit {
     width: 100%;
     border-collapse: collapse;
     margin-top: 15px;
-    font-size: 0.9em; /* Police légèrement réduite pour le tableau */
+    font-size: 0.9em; 
 }
 
 .rappel-table th {
@@ -745,15 +745,15 @@ form button[type="submit"]#btn-submit {
     background-color: #f8fafc;
 }
 
-/* Éviter les coupures disgracieuses au milieu d'un bloc lors du saut de page */
+
 .no-break {
     page-break-inside: avoid;
     break-inside: avoid;
 }
 
-/* ========================================= */
-/* SYSTEME D'AVIS ET ETOILES                 */
-/* ========================================= */
+
+/* SYSTEME D'AVIS ET ETOILES  */
+
 
 .avis-form {
     max-width: 600px;
@@ -761,7 +761,7 @@ form button[type="submit"]#btn-submit {
     text-align: center;
 }
 
-/* On utilise flex-direction: row-reverse pour pouvoir colorer les étoiles précédentes grâce au sélecteur CSS ~ */
+
 .rating {
     display: flex;
     flex-direction: row-reverse;
@@ -771,7 +771,7 @@ form button[type="submit"]#btn-submit {
 }
 
 .rating input {
-    display: none; /* On cache les vrais boutons radio */
+    display: none; 
 }
 
 .rating label {
@@ -781,7 +781,7 @@ form button[type="submit"]#btn-submit {
     transition: color 0.2s ease;
 }
 
-/* Magie CSS : colore en jaune l'étoile survolée (ou cochée) ET toutes celles qui la "suivent" dans le HTML (qui sont à sa gauche à l'écran grâce au row-reverse) */
+
 .rating input:checked ~ label,
 .rating label:hover,
 .rating label:hover ~ label {
