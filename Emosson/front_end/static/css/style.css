@@ -100,6 +100,16 @@ header h1 {
     margin-bottom: 20px;
     border-bottom: 3px solid #4bc7dd;
     padding-bottom: 10px;
+    text-align: center;
+}
+
+.section h3 {
+    font-size: 1rem;
+    color: #000000;
+    margin-bottom: 20px;
+    
+    padding-bottom: 10px;
+    text-align: center;
 }
 
 .section p {
@@ -119,14 +129,34 @@ header img {
     text-align: center;
 }
 
+.bandeau_actualite {     
+    display: flex;     
+    justify-content: center;     
+    align-items: center;     
+    gap: 30px;      
+    padding: 20px 20px 0 20px;     
+    flex-wrap: wrap;     
+    font-size: 1.1rem;                
+    font-family: 'Open Sauce', sans-serif;       
+    font-weight: 500;
+    flex: none ; 
+}
+
+.bandeau_actualite section .images  {
+    display: flex;  
+    gap: 15px;
+}
+
+
+
 .image_accueil {
     width: 100%;
-    line-height: 0; /* supprime l'espace sous l'image */
+    line-height: 0; 
 }
 
 .image_accueil img {
     width: 100%;
-    max-width: 100%;  /* écrase la règle .section img */
+    max-width: 100%;  
     height: auto;
     display: block;
     border-radius: 0;
@@ -519,13 +549,13 @@ form button[type="submit"]#btn-submit {
 .form-select {
     margin-bottom: 20px;
     padding: 20px;
-    background-color: #ffffff; /* Fond blanc comme sur votre image */
+    background-color: #ffffff; 
     border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Petite ombre légère */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
 }
-/* ------------------------------------- */
-/* RESPONSIVE DESIGN */
-/* ------------------------------------- */
+
+
+
 @media (max-width: 768px) {
     .header-container {
         flex-direction: column;
@@ -564,10 +594,10 @@ form button[type="submit"]#btn-submit {
     background: white;
     color: #333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    display: block; /* Évite les comportements flex indésirables d'html2pdf */
+    display: block; 
 }
 
-/* En-tête Bilan (Titre + Score côte à côte) */
+
 .pdf-header-wrapper {
     display: flex;
     justify-content: space-between;
@@ -632,7 +662,7 @@ form button[type="submit"]#btn-submit {
 
 /* Section Carte */
 .map-pdf-container {
-    height: 300px; /* Force une hauteur raisonnable pour le PDF */
+    height: 300px; /
     width: 100%;
     margin-bottom: 30px;
     border-radius: 8px;
