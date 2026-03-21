@@ -148,7 +148,7 @@
     <script>
         // Initialisation de la carte Leaflet
         // L'objet geom est passé depuis Flask en JSON sécurisé
-        initMap({{ lat }}, {{ lon }}, {{ geom | safe }});
+        initMap({{ lat | tojson }}, {{ lon | tojson }}, {{ geom | safe }});
     </script>
 </body>
 </html>

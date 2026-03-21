@@ -100,7 +100,7 @@ function initMap(lat, lon, geomList) {
             // Icône maison
             div.innerHTML +=
                 '<div class="legend-marker">' +
-                '<svg ...></svg>' +
+                '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 32 32"><circle fill="#255585" cx="16" cy="16" r="16"/><path fill="white" d="M16 7L7 15h3v9h6v-6h4v6h2v-9h3z"/></svg>' +
                 '<span>Adresse de votre logement</span>' +
                 '</div>';
 
@@ -111,12 +111,13 @@ function initMap(lat, lon, geomList) {
 
     // Icone maison
     var monIcone = L.divIcon({
-        html: `<svg ...>...</svg>`,
-        className: '',
-        iconSize:   [28, 40],
-        iconAnchor: [14, 40],  // point d'ancrage en bas au centre
-        popupAnchor:[0, -40]
-    });
+            html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+            <circle fill="#255585" cx="16" cy="16" r="16"/>
+            <path fill="white" d="M16 7L7 15h3v9h6v-6h4v6h2v-9h3z"/></svg>`,
+            className: '',
+            iconSize:   [28, 40],
+            popupAnchor:[0, -40]
+        });
     L.marker([lat, lon], { icon: monIcone }).addTo(map);
     setTimeout(function() { map.invalidateSize(); }, 100);
 }
