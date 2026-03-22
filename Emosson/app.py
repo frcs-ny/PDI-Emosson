@@ -21,17 +21,18 @@ conn.autocommit = True
 def get_questions():
     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.zone_inondable ORDER BY id")
+    # Ajout de inclure_stats dans le SELECT
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.zone_inondable ORDER BY id")
     questions_zone = [dict(row) for row in cur.fetchall()]
     for q in questions_zone:
         q['prefix'] = 'zone'
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.questions_logement ORDER BY id")
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.questions_logement ORDER BY id")
     questions_logement = [dict(row) for row in cur.fetchall()]
     for q in questions_logement:
         q['prefix'] = 'logement'
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations FROM public.protection_personnes ORDER BY id")
+    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.protection_personnes ORDER BY id")
     questions_protection = [dict(row) for row in cur.fetchall()]
     for q in questions_protection:
         q['prefix'] = 'protection'
@@ -373,8 +374,12 @@ def calcul():
 
 @app.route('/statistiques')
 def statistiques():
-    # Récupération de toutes les questions pour alimenter la liste déroulante
     questions_zone, questions_logement, questions_protection, _ = get_questions()
+    
+    # On ne garde que les questions marquées TRUE dans la colonne "inclure_stats"
+    questions_zone = [q for q in questions_zone if q.get('inclure_stats') is True]
+    questions_logement = [q for q in questions_logement if q.get('inclure_stats') is True]
+    questions_protection = [q for q in questions_protection if q.get('inclure_stats') is True]
     
     categorie = request.args.get('categorie', 'logement')
     

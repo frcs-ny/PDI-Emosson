@@ -12,7 +12,8 @@ CREATE TABLE public.zone_inondable (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.zone_inondable(id),
-    recommandations TEXT[]
+    recommandations TEXT[],
+    inclure_stats BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE public.questions_logement (
@@ -23,7 +24,8 @@ CREATE TABLE public.questions_logement (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.questions_logement(id),
-    recommandations TEXT[]
+    recommandations TEXT[],
+    inclure_stats BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE public.protection_personnes (
@@ -34,7 +36,8 @@ CREATE TABLE public.protection_personnes (
     scores_vulnerabilite NUMERIC[] NOT NULL,
     a_dependance BOOLEAN DEFAULT FALSE,
     id_question_liee INTEGER REFERENCES public.protection_personnes(id),
-    recommandations TEXT[]
+    recommandations TEXT[],
+    inclure_stats BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE public.reponses_utilisateurs (
@@ -52,30 +55,30 @@ CREATE TABLE public.avis (
     date_avis TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
+INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats) VALUES
 
--- Zone inondable
+-- Zone inondable (Exclue des stats)
 ('Zone inondable', 'Quelle est l''adresse de votre bien ?', 
  ARRAY['Zone de dissipation de l''énergie (ZDE)', 'Ecoulement préférentiel (EP)', 'Modéré (M)', 'Fort (F)', 'Très fort (TF)'], 
  ARRAY[140, 140, 80, 110, 140], FALSE, NULL, 
- ARRAY['', '', '', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.']),
+ ARRAY['', '', '', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.', 'Pour limiter l''entrée d''eau dans votre logement, vous pouvez vous équiper de batardeaux (des barrières étanches amovibles faites sur mesure) à placer devant vos portes et fenêtres du rez-de-chaussée. Complétez cela en occultant temporairement vos petites aérations basses avec des capots.'], FALSE),
 
 -- Niveau du plancher
 ('Niveau du plancher', 'Avez-vous fait des travaux récemment au niveau du rez-de-chaussée ?', 
  ARRAY['Oui', 'Non'], 
  ARRAY[0, 0], FALSE, NULL, 
- ARRAY['', 'Pour empêcher l''eau de remonter par les canalisations dans vos pièces de vie, vous pouvez installer un clapet anti-retour permanent sur votre réseau d''évacuation des eaux usées ou pluviales.']),
+ ARRAY['', 'Pour empêcher l''eau de remonter par les canalisations dans vos pièces de vie, vous pouvez installer un clapet anti-retour permanent sur votre réseau d''évacuation des eaux usées ou pluviales.'], TRUE),
 
 ('Niveau du plancher', 'Quel est le niveau du premier plancher habitable de mon habitation ?', 
  ARRAY['x'], 
  ARRAY[0], FALSE, NULL, 
- ARRAY['']),
+ ARRAY[''], TRUE),
 
--- Hauteur d'eau potentielle
+-- Hauteur d'eau potentielle (Exclue des stats)
 ('Hauteur d''eau potentielle', 'Calcul H = niveau d''inondation (donné dans la zone d''aléas) - niveau du premier plancher', 
  ARRAY['h >= 0.2', 'h <= 0.2'], 
  ARRAY[-20, 0], FALSE, NULL, 
- ARRAY['', '']);
+ ARRAY['', ''], FALSE);
 
 
 INSERT INTO public.questions_logement (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
@@ -273,4 +276,3 @@ INSERT INTO public.protection_personnes (critere, question, reponses, scores_vul
  ARRAY['Oui', 'Non', 'Je n''ai pas de piscine'], 
  ARRAY[0, 20, 0], FALSE, NULL, 
  ARRAY['', 'Pour assurer la sécurité des secouristes en cas d''inondation, il est préconisé d''installer une barrière périphérique autour de votre piscine ou bassin. Assurez-vous qu''elle mesure au moins 1,10 mètre de haut afin de rester visible même sous 1 mètre d''eau.', '']);
-
