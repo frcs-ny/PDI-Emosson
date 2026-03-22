@@ -36,6 +36,7 @@
                             <option value="logement" {% if categorie == 'logement' %}selected{% endif %}>Logement</option>
                             <option value="zone" {% if categorie == 'zone' %}selected{% endif %}>Zone inondable</option>
                             <option value="protection" {% if categorie == 'protection' %}selected{% endif %}>Protection</option>
+                            <option value="global" {% if categorie == 'global' %}selected{% endif %}>Score Global</option>
                         </select>
                     </div>
                     
@@ -51,29 +52,51 @@
                 </form>
             </div>
 
-            <h3 style="margin-top: 30px; color: #2c3e50;">Question analysée : <em>"{{ question_texte }}"</em></h3>
-
-            {% if stats %}
-            <table class="stats-table">
-                <thead>
-                    <tr>
-                        <th>Réponse donnée</th>
-                        <th>Nombre de fois choisie</th>
-                        <th>Pourcentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in stats %}
-                    <tr>
-                        <td>{{ row.reponse }}</td>
-                        <td>{{ row.compte }} (sur {{ row.total }})</td>
-                        <td><strong>{{ row.pourcentage }} %</strong></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if categorie == 'global' %}
+                <h3 style="margin-top: 30px; color: #2c3e50; text-align: center;">Moyenne générale des diagnostics</h3>
+                
+                <div style="text-align: center; padding: 20px;">
+                    {% if total > 0 %}
+                    <div style="margin: 20px auto; max-width: 600px; padding: 40px 30px; background: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                        <div style="display: flex; justify-content: center; align-items: center; margin: 20px 0;">
+                            <div style="width: 150px; height: 150px; border-radius: 50%; border: 8px solid #3498db; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; color: #3498db; flex-direction: column;">
+                                <div>{{ moyenne }}</div>
+                                <div style="font-size: 1rem; color: #7f8c8d; font-weight: normal;">/ 100</div>
+                            </div>
+                        </div>
+                        <p style="color: #7f8c8d; margin-top: 20px;">Basé sur <strong>{{ total }}</strong> diagnostic(s) complété(s).</p>
+                    </div>
+                    {% else %}
+                    <div style="margin: 40px auto; padding: 30px; background: #fdf2f0; border-radius: 10px; max-width: 600px;">
+                        <p style="color: #e74c3c; font-size: 1.1rem; margin: 0;">Aucun questionnaire n'a encore été complété.</p>
+                    </div>
+                    {% endif %}
+                </div>
             {% else %}
-            <p style="margin-top: 20px; color: #e74c3c;">Aucune donnée disponible pour cette question ou aucun utilisateur n'y a encore répondu.</p>
+                <h3 style="margin-top: 30px; color: #2c3e50;">Question analysée : <em>"{{ question_texte }}"</em></h3>
+
+                {% if stats %}
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>Réponse donnée</th>
+                            <th>Nombre de fois choisie</th>
+                            <th>Pourcentage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in stats %}
+                        <tr>
+                            <td>{{ row.reponse }}</td>
+                            <td>{{ row.compte }} (sur {{ row.total }})</td>
+                            <td><strong>{{ row.pourcentage }} %</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="margin-top: 20px; color: #e74c3c;">Aucune donnée disponible pour cette question ou aucun utilisateur n'y a encore répondu.</p>
+                {% endif %}
             {% endif %}
 
         </section>
@@ -100,6 +123,10 @@
                 {% for q in questions_protection %}
                 { id: {{ q.id }}, text: {{ (q.id | string + " - " + q.question) | tojson }} },
                 {% endfor %}
+            ],
+            // Ajout de la fausse question pour le visuel de la catégorie globale
+            'global': [
+                { id: 0, text: "Voir la moyenne des scores finaux" }
             ]
         };
 
@@ -127,13 +154,22 @@
                 }
                 opt.textContent = texteAffiche;
                 
-                // Pré-sélectionner la question en cours d'analyse
-                if (q.id === currentQId) {
+                // Pré-sélectionner la question en cours d'analyse (désactivé si mode global)
+                if (q.id === currentQId && cat !== 'global') {
                     opt.selected = true;
                 }
                 
                 qSelect.appendChild(opt);
             });
+
+            // Griser le sélecteur de question si on est sur le mode global
+            if (cat === 'global') {
+                qSelect.style.pointerEvents = 'none';
+                qSelect.style.background = '#e9ecef';
+            } else {
+                qSelect.style.pointerEvents = 'auto';
+                qSelect.style.background = '#fff';
+            }
         }
 
         // Dès qu'on change la catégorie, on met à jour les questions et on sélectionne la 1ère

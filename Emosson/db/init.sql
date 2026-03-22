@@ -2,6 +2,7 @@ DROP TABLE IF EXISTS public.zone_inondable CASCADE;
 DROP TABLE IF EXISTS public.questions_logement CASCADE;
 DROP TABLE IF EXISTS public.protection_personnes CASCADE;
 DROP TABLE IF EXISTS public.reponses_utilisateurs CASCADE;
+DROP TABLE IF EXISTS public.scores_questionnaires CASCADE;
 DROP TABLE IF EXISTS public.avis CASCADE;
 
 CREATE TABLE public.zone_inondable (
@@ -45,6 +46,12 @@ CREATE TABLE public.reponses_utilisateurs (
     id_question INTEGER NOT NULL,
     categorie VARCHAR(50) NOT NULL,
     reponse_donnee TEXT NOT NULL,
+    date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE public.scores_questionnaires (
+    id SERIAL PRIMARY KEY,
+    score INTEGER NOT NULL,
     date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

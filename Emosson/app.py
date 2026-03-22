@@ -353,6 +353,12 @@ def calcul():
     hue = max(0, 120 - (score_cent * 1.2))
     couleur_score = f"hsl({hue}, 100%, 40%)"
     
+    # SAUVEGARDE DU SCORE GLOBAUX POUR LES STATISTIQUES
+    try:
+        cur.execute("INSERT INTO public.scores_questionnaires (score) VALUES (%s)", (score_cent,))
+    except Exception as e:
+        print(f"Erreur d'insertion du score global : {e}")
+    
     geom_json = json.dumps(geom) if geom else 'null'
 
     return render_template('calcul.html', 
@@ -383,60 +389,78 @@ def statistiques():
     
     categorie = request.args.get('categorie', 'logement')
     
-    # Définir l'ID par défaut sur la première question de la catégorie choisie
-    default_id = 1
-    if categorie == 'logement' and questions_logement:
-        default_id = questions_logement[0]['id']
-    elif categorie == 'zone' and questions_zone:
-        default_id = questions_zone[0]['id']
-    elif categorie == 'protection' and questions_protection:
-        default_id = questions_protection[0]['id']
-        
-    question_id = request.args.get('id', default_id, type=int)
-
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    
-    if categorie == 'logement':
-        table_name = "public.questions_logement"
-    elif categorie == 'protection':
-        table_name = "public.protection_personnes"
-    else:
-        table_name = "public.zone_inondable"
-        
+    stats = []
     question_texte = "Question introuvable"
-    try:
-        cur.execute(f"SELECT question FROM {table_name} WHERE id = %s", (question_id,))
-        result = cur.fetchone()
-        if result:
-            question_texte = result['question']
+    question_id = 0
+    moyenne = None
+    total = 0
+    
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    if categorie == 'global':
+        # On calcule simplement la moyenne et le nombre de questionnaires complétés
+        try:
+            cur.execute("SELECT ROUND(AVG(score), 1) AS moyenne, COUNT(*) AS total FROM public.scores_questionnaires")
+            data = cur.fetchone()
+            moyenne = data['moyenne'] if data and data['moyenne'] is not None else None
+            total = data['total'] if data else 0
+            question_texte = "Moyenne globale"
+        except Exception as e:
+            print(f"Erreur SQL stats globales: {e}")
             
-        # Requête pour calculer les statistiques
-        query = """
-            SELECT 
-                reponse_donnee AS reponse,
-                COUNT(*) AS compte,
-                SUM(COUNT(*)) OVER() AS total,
-                ROUND((COUNT(*) * 100.0) / SUM(COUNT(*)) OVER(), 1) AS pourcentage
-            FROM 
-                public.reponses_utilisateurs
-            WHERE 
-                categorie = %s AND id_question = %s
-            GROUP BY 
-                reponse_donnee
-            ORDER BY 
-                compte DESC;
-        """
-        cur.execute(query, (categorie, question_id))
-        stats = cur.fetchall()
-    except Exception as e:
-        print(f"Erreur SQL: {e}")
-        stats = []
+    else:
+        # Définir l'ID par défaut sur la première question de la catégorie choisie
+        default_id = 1
+        if categorie == 'logement' and questions_logement:
+            default_id = questions_logement[0]['id']
+        elif categorie == 'zone' and questions_zone:
+            default_id = questions_zone[0]['id']
+        elif categorie == 'protection' and questions_protection:
+            default_id = questions_protection[0]['id']
+            
+        question_id = request.args.get('id', default_id, type=int)
+        
+        if categorie == 'logement':
+            table_name = "public.questions_logement"
+        elif categorie == 'protection':
+            table_name = "public.protection_personnes"
+        else:
+            table_name = "public.zone_inondable"
+            
+        try:
+            cur.execute(f"SELECT question FROM {table_name} WHERE id = %s", (question_id,))
+            result = cur.fetchone()
+            if result:
+                question_texte = result['question']
+                
+            # Requête pour calculer les statistiques
+            query = """
+                SELECT 
+                    reponse_donnee AS reponse,
+                    COUNT(*) AS compte,
+                    SUM(COUNT(*)) OVER() AS total,
+                    ROUND((COUNT(*) * 100.0) / SUM(COUNT(*)) OVER(), 1) AS pourcentage
+                FROM 
+                    public.reponses_utilisateurs
+                WHERE 
+                    categorie = %s AND id_question = %s
+                GROUP BY 
+                    reponse_donnee
+                ORDER BY 
+                    compte DESC;
+            """
+            cur.execute(query, (categorie, question_id))
+            stats = cur.fetchall()
+        except Exception as e:
+            print(f"Erreur SQL stats questions: {e}")
 
     return render_template('statistiques.html', 
                            stats=stats, 
                            question_texte=question_texte, 
                            id=question_id, 
                            categorie=categorie,
+                           moyenne=moyenne,
+                           total=total,
                            questions_zone=questions_zone,
                            questions_logement=questions_logement,
                            questions_protection=questions_protection,
