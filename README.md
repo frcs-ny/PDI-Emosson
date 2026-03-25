@@ -37,7 +37,7 @@ L’environnement est composé de 3 services (définis dans `docker-compose.yml`
 
 | Service                | Nom interne | Rôle                                    | Ports exposés (hôte:docker) | Volume principal                         |
 | ---------------------- | ----------- | --------------------------------------- | --------------------------- | ---------------------------------------- |
-| **Flask**              | web         | Serveur web pour application Flask      | `8000:5000`                 | `.:/app`        |
+| **Flask**              | flask         | Serveur web pour application Flask      | `8000:5000`                 | `.:/app`        |
 | **PostgreSQL+PostGIS** | db          | Base de données spatiale                | `5432`                      | `pg_data:/var/lib/postgresql/data`       |
 | **pgAdmin**            | pgadmin     | Interface web pour gérer Postgres       | `5050:80`                   | `pgadmin_data:/var/lib/pgadmin`          |
 
@@ -84,22 +84,25 @@ volumes:
 
 ## Commandes de base
 
+
 ```sh
-# lance la stack Docker
+# lance l'environnement 
 docker compose up
 docker compose up -d # en mode daemon
 
-# arrête la stack
+# arrête l'environnement
 docker compose down
 docker compose down -v # supprime en plus les volumes
 ```
+
+Ces commandes sont à lancer dans le dossier "Emosson"
 
 ## Sauvegarde
 
 Pour récupérer en local les données de la BDD, exécutez les scripts respectifs depuis la racine du projet
 
 ```sh
-# Export SQL de la base (dump)
+# Export SQL de la base 
 docker compose exec -t db pg_dump --inserts -U postgres -d mydb > "./db/backup.sql"
 ```
 
