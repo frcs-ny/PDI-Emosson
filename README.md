@@ -94,7 +94,7 @@ docker compose down
 docker compose down -v # supprime en plus les volumes
 ```
 
-Ces commandes sont à lancer dans le dossier "Emosson"
+Ces commandes sont à lancer dans le dossier `Emosson` via un invite de commandes 
 
 ## Sauvegarde
 
