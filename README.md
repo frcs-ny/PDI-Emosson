@@ -49,10 +49,10 @@ L’environnement est composé de 3 services (définis dans `docker-compose.yml`
 - fichiers sources dans `./app.py`
 - http://localhost:8000:5000
 
-### Bibliothéque Python 
+### Bibliothèques Python 
 
-- Pour rajouter des bibliothéques dans l'environnement python il faut les renseigner dans le fichier "requirements.txt" à la racine du projet.
-- Les bibliothéques seront installés à chaque nouvelle construction de l'environnement.
+- Pour rajouter des bibliothèques dans l'environnement python il faut les renseigner dans le fichier "requirements.txt" à la racine du projet.
+- Les bibliothèques seront installés à chaque nouvelle construction de l'environnement.
 
 ### Postgres+PostGIS
 
