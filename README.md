@@ -21,13 +21,13 @@ Le site web est composé de plusieurs pages :
 - Page d'actualité renvoyant vers différents sites d'informations 
 
 ### - Page de statistiques
-- Page permmettant d'avoir accés au nombres et pourcentages de réponses par questions
+- Page permmettant d'avoir accès aux nombres et pourcentages de réponses par questions
 
 ### - Page d'avis 
 - Cette page permet de receuillir les avis et ressentis des utilisateurs.
 
 ### - Page de résultats et bilan
-- Accessible à l'issue du questionnaire et qui proposera un score de vulnérabilité et des recommandations pour protéger le bien de l'utilisateur avec la possibilité de télécharger le bilan sous forme de fichier PDF. 
+- Accessible à l'issue du questionnaire et qui proposera un score de vulnérabilité et des recommandations pour protéger le bien de l'utilisateur, avec la possibilité de télécharger le bilan sous forme de fichier PDF. 
 
 ## Mise en place de l'environnement d'Emosson
 
@@ -37,7 +37,7 @@ L’environnement est composé de 3 services (définis dans `docker-compose.yml`
 
 | Service                | Nom interne | Rôle                                    | Ports exposés (hôte:docker) | Volume principal                         |
 | ---------------------- | ----------- | --------------------------------------- | --------------------------- | ---------------------------------------- |
-| **Flask**              | flask         | Serveur web pour application Flask      | `8000:5000`                 | `.:/app`        |
+| **Flask**              | flask       | Serveur web pour application Flask      | `8000:5000`                 | `.:/app`                                 |
 | **PostgreSQL+PostGIS** | db          | Base de données spatiale                | `5432`                      | `pg_data:/var/lib/postgresql/data`       |
 | **pgAdmin**            | pgadmin     | Interface web pour gérer Postgres       | `5050:80`                   | `pgadmin_data:/var/lib/pgadmin`          |
 
