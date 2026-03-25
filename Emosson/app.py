@@ -17,35 +17,37 @@ app = Flask(
 conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
 conn.autocommit = True
 
-# requetes SQL
-def get_questions():
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+# Requetes SQL pour récupérer les questions
+def recuperer_questions():
+    curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
-    # Ajout de inclure_stats dans le SELECT
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.zone_inondable ORDER BY id")
-    questions_zone = [dict(row) for row in cur.fetchall()]
-    for q in questions_zone:
-        q['prefix'] = 'zone'
+    curseur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.zone_inondable ORDER BY id")
+    questions_zone = [dict(ligne) for ligne in curseur.fetchall()]
+    for question in questions_zone:
+        question['prefix'] = 'zone'
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.questions_logement ORDER BY id")
-    questions_logement = [dict(row) for row in cur.fetchall()]
-    for q in questions_logement:
-        q['prefix'] = 'logement'
+    curseur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.questions_logement ORDER BY id")
+    questions_logement = [dict(ligne) for ligne in curseur.fetchall()]
+    for question in questions_logement:
+        question['prefix'] = 'logement'
 
-    cur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.protection_personnes ORDER BY id")
-    questions_protection = [dict(row) for row in cur.fetchall()]
-    for q in questions_protection:
-        q['prefix'] = 'protection'
+    curseur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.protection_personnes ORDER BY id")
+    questions_protection = [dict(ligne) for ligne in curseur.fetchall()]
+    for question in questions_protection:
+        question['prefix'] = 'protection'
 
     score_max_theorique = 0.0
-    all_questions = questions_zone + questions_logement + questions_protection
-    for q in all_questions:
-        scores = q.get('scores_vulnerabilite')
+    toutes_les_questions = questions_zone + questions_logement + questions_protection
+    
+    # On calcule le score maximum qu'un utilisateur pourrait théoriquement atteindre
+    for question in toutes_les_questions:
+        scores = question.get('scores_vulnerabilite')
         if scores:
             try:
-                valid_scores = [float(s) for s in scores if s is not None]
-                if valid_scores:
-                    score_max_theorique += max(valid_scores)
+                # On convertit les scores en nombres décimaux en ignorant les valeurs vides
+                scores_valides = [float(score) for score in scores if score is not None]
+                if scores_valides:
+                    score_max_theorique += max(scores_valides)
             except (ValueError, TypeError):
                 pass 
 
@@ -67,8 +69,9 @@ def qui_sommes_nous():
 
 @app.route('/questionnaire')
 def questionnaire():
-    questions_zone, questions_logement, questions_protection, _ = get_questions()
+    questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
 
+    # Etapes de base (informations utilisateur)
     etapes = [
         {'critere': 'Informations générales', 'question': 'Nom et Prénom :',                 'type': 'text', 'name': 'nom',         'placeholder': 'Ex: Dupont',                  'pattern': None, 'a_dependance': False},
         {'critere': 'Informations générales', 'question': 'Numéro et libellé de la voie :',  'type': 'text', 'name': 'adresse',     'placeholder': 'Ex: 10 Rue de la République', 'pattern': None, 'a_dependance': False},
@@ -76,28 +79,30 @@ def questionnaire():
         {'critere': 'Informations générales', 'question': 'Ville :',                         'type': 'text', 'name': 'ville',       'placeholder': 'Ex: Tours',                   'pattern': None, 'a_dependance': False},
     ]
 
-    questions = questions_zone + questions_logement + questions_protection
-    for q in questions:
-        # On ignore les questions automatiques pour ne pas les afficher (dont la 21)
-        if q['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"] or (q['prefix'] == 'logement' and q['id'] == 21):
+    toutes_les_questions = questions_zone + questions_logement + questions_protection
+    for question in toutes_les_questions:
+        # On ignore les questions qui sont calculées automatiquement (dont la 21)
+        if question['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"] or (question['prefix'] == 'logement' and question['id'] == 21):
             continue
 
-        reponses = q['reponses']  
-        input_name = f"rep_{q['prefix']}_{q['id']}"
-        parent_name = f"rep_{q['prefix']}_{q['id_question_liee']}" if q.get('a_dependance') else None
+        reponses = question['reponses']  
+        nom_champ = f"rep_{question['prefix']}_{question['id']}"
+        nom_parent = f"rep_{question['prefix']}_{question['id_question_liee']}" if question.get('a_dependance') else None
 
         etape_base = {
-            'critere': q['critere'], 
-            'question': q['question'],
-            'name': input_name,
-            'a_dependance': q.get('a_dependance', False),
-            'id_question_liee': q.get('id_question_liee'),
-            'parent_name': parent_name
+            'critere': question['critere'], 
+            'question': question['question'],
+            'name': nom_champ,
+            'a_dependance': question.get('a_dependance', False),
+            'id_question_liee': question.get('id_question_liee'),
+            'parent_name': nom_parent
         }
 
+        # Si la seule réponse possible est "x", c'est qu'on attend un nombre
         if len(reponses) == 1 and reponses[0] == 'x':
             etape_base.update({'type': 'number', 'placeholder': 'Ex: 0.50 m'})
         else:
+            # Sinon on propose une liste déroulante
             etape_base.update({'type': 'select', 'options': list(enumerate(reponses))})
             
         etapes.append(etape_base)
@@ -107,16 +112,16 @@ def questionnaire():
 
 @app.route('/calcul')
 def calcul():
-    questions_zone, questions_logement, questions_protection, _ = get_questions()
-    all_questions_db = questions_zone + questions_logement + questions_protection
+    questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
+    toutes_les_questions_bdd = questions_zone + questions_logement + questions_protection
     
-    details = []
+    details_calcul = []
     
     nom_utilisateur = request.args.get('nom', 'Utilisateur inconnu').strip()
     if not nom_utilisateur:
         nom_utilisateur = 'Utilisateur inconnu'
         
-    # Structuration par catégories
+    # On structure les recommandations par catégories pour l'affichage final
     recommandations_groupees = {
         'zone': [],
         'logement': [],
@@ -127,7 +132,7 @@ def calcul():
         'logement': 'Aménagement du logement',
         'protection': 'Protection des personnes'
     }
-    rappel_qr = []
+    rappel_questions_reponses = []
     
     niveau_plancher = 0.0
     
@@ -136,27 +141,27 @@ def calcul():
     ville_brute = request.args.get('ville', '')
     adresse_complete = f"{adresse_brute} {cp_brut} {ville_brute}".strip()
     
-    lon, lat = None, None
+    longitude, latitude = None, None
     dans_zich = False
     hmax_zich = 0.0
     zone_choisie_texte = ""
-    geom = None
+    geometries_zich = None
 
     if adresse_complete:
         try:
-            # 1. Obtenir les coordonnées GPS
-            result_coords = adresse_vers_coordonnees(adresse_complete)
-            lon = result_coords['lon']
-            lat = result_coords['lat']
+            # Etape 1 : Obtenir les coordonnées GPS depuis l'adresse
+            resultat_coordonnees = adresse_vers_coordonnees(adresse_complete)
+            longitude = resultat_coordonnees['lon']
+            latitude = resultat_coordonnees['lat']
             
-            # 2. Chercher les données de submersion ZICH
-            stations = recuperer_info_toutes_les_station()
-            code_station, nom_station = trouver_station_plus_proche(stations, lon, lat)
-            hauteur_max_station, geom_zich = recuperer_geom_zich(code_station)
-            dans_zich, hmin_zich, hmax_zich, geom = est_dans_une_zich(code_station, lon, lat, hauteur_max_station, geom_zich)
+            # Etape 2 : Chercher si l'adresse est dans une zone inondable (ZICH)
+            liste_stations = recuperer_info_toutes_les_station()
+            code_station, nom_station = trouver_station_plus_proche(liste_stations, longitude, latitude)
+            hauteur_max_station, geom_brute_zich = recuperer_geom_zich(code_station)
+            dans_zich, hmin_zich, hmax_zich, geometries_zich = est_dans_une_zich(code_station, longitude, latitude, hauteur_max_station, geom_brute_zich)
             
             if dans_zich:
-                # 3. Application de la classification du tableau PPRI
+                # Application du niveau d'alerte selon la hauteur d'eau
                 if hmax_zich <= 1.0:
                     zone_choisie_texte = "Modéré"
                 elif 1.0 < hmax_zich <= 2.50:
@@ -164,277 +169,279 @@ def calcul():
                 else:
                     zone_choisie_texte = "Très fort"
                 
-                details.append(f"🌊 Analyse ZICH : En zone inondable (Station: {nom_station})")
-                details.append(f"🌊 Submersion estimée : {hmax_zich} m -> Aléa automatiquement classé '{zone_choisie_texte}'")
+                details_calcul.append(f"🌊 Analyse ZICH : En zone inondable (Station: {nom_station})")
+                details_calcul.append(f"🌊 Submersion estimée : {hmax_zich} m -> Aléa automatiquement classé '{zone_choisie_texte}'")
             else:
-                details.append("🌊 Analyse ZICH : Hors zone inondable pour le scénario extrême étudié.")
+                details_calcul.append("🌊 Analyse ZICH : Hors zone inondable pour le scénario extrême étudié.")
                 
-        except Exception as e:
-            details.append(f"⚠️ Erreur lors de l'analyse spatiale de l'adresse. ({e})")
+        except Exception as erreur:
+            details_calcul.append(f"⚠️ Erreur lors de l'analyse de l'adresse. ({erreur})")
 
 
-    # 1. Récupération des réponses saisies ET sauvegarde en BDD
-    user_answers_text = {}
-    cur = conn.cursor() # Création d'un curseur pour l'insertion
+    # Sauvegarde des réponses de l'utilisateur en base de données
+    reponses_utilisateur = {}
+    curseur = conn.cursor()
     
-    for q in all_questions_db:
-        input_name = f"rep_{q['prefix']}_{q['id']}"
-        user_answer = request.args.get(input_name)
+    for question in toutes_les_questions_bdd:
+        nom_champ = f"rep_{question['prefix']}_{question['id']}"
+        reponse_donnee = request.args.get(nom_champ)
         
-        if user_answer is not None and str(user_answer).strip() != '':
+        if reponse_donnee is not None and str(reponse_donnee).strip() != '':
             texte_a_sauvegarder = ""
             
-            if len(q['reponses']) == 1 and q['reponses'][0] == 'x':
-                user_answers_text[(q['prefix'], q['id'])] = user_answer
-                texte_a_sauvegarder = str(user_answer)
+            if len(question['reponses']) == 1 and question['reponses'][0] == 'x':
+                reponses_utilisateur[(question['prefix'], question['id'])] = reponse_donnee
+                texte_a_sauvegarder = str(reponse_donnee)
             else:
                 try:
-                    index = int(user_answer)
-                    user_answers_text[(q['prefix'], q['id'])] = q['reponses'][index]
-                    texte_a_sauvegarder = q['reponses'][index]
+                    indice = int(reponse_donnee)
+                    reponses_utilisateur[(question['prefix'], question['id'])] = question['reponses'][indice]
+                    texte_a_sauvegarder = question['reponses'][indice]
                 except (ValueError, IndexError):
                     pass
             
-            # Sauvegarde de la réponse dans la nouvelle table
+            # Insertion en base de données
             if texte_a_sauvegarder:
                 try:
-                    cur.execute(
+                    curseur.execute(
                         "INSERT INTO public.reponses_utilisateurs (id_question, categorie, reponse_donnee) VALUES (%s, %s, %s)",
-                        (q['id'], q['prefix'], texte_a_sauvegarder)
+                        (question['id'], question['prefix'], texte_a_sauvegarder)
                     )
-                except Exception as e:
-                    print(f"Erreur d'insertion en BDD: {e}")
+                except Exception as erreur:
+                    print(f"Erreur d'insertion en BDD: {erreur}")
 
-    # 2. Calcul du score
+    # Calcul des scores du questionnaire
     score_total = 0.0
     score_max_dynamique = 0.0
     
-    for q in all_questions_db:
-        qid = q['id']
-        prefix = q['prefix']
-        critere = q['critere']
-        reponses = q['reponses']
-        scores = q['scores_vulnerabilite']
-        recommandations = q.get('recommandations', [])
+    for question in toutes_les_questions_bdd:
+        id_question = question['id']
+        prefixe = question['prefix']
+        critere = question['critere']
+        reponses_possibles = question['reponses']
+        scores = question['scores_vulnerabilite']
+        recommandations = question.get('recommandations', [])
         
-        # Dépendances
-        if q.get('a_dependance') and q.get('id_question_liee'):
-            parent_answer = user_answers_text.get((prefix, q['id_question_liee']))
-            if not parent_answer or parent_answer.strip().lower() == 'non':
+        # Gestion des questions dépendantes (on l'ignore si la question parente a été répondue par "Non")
+        if question.get('a_dependance') and question.get('id_question_liee'):
+            reponse_parente = reponses_utilisateur.get((prefixe, question['id_question_liee']))
+            if not reponse_parente or reponse_parente.strip().lower() == 'non':
                 continue
                 
-        # Score max dynamique
+        # Mise à jour du score maximum que l'utilisateur aurait pu avoir
         try:
-            valid_scores = [float(s) for s in scores if s is not None]
-            if valid_scores:
-                score_max_dynamique += max(valid_scores)
+            scores_valides = [float(s) for s in scores if s is not None]
+            if scores_valides:
+                score_max_dynamique += max(scores_valides)
         except (ValueError, TypeError):
             pass
             
-        # Traitement automatisé de la Zone Inondable
+        # --- Traitement automatique des risques d'inondation ---
         if critere == 'Zone inondable':
             if dans_zich and zone_choisie_texte != '':
-                idx = -1
-                for i, r in enumerate(reponses):
-                    if zone_choisie_texte in r: 
-                        idx = i
+                indice_trouve = -1
+                for index_reponse, texte_rep in enumerate(reponses_possibles):
+                    if zone_choisie_texte in texte_rep: 
+                        indice_trouve = index_reponse
                         break
                 
-                if idx != -1:
-                    score_obtenu = float(scores[idx])
+                if indice_trouve != -1:
+                    score_obtenu = float(scores[indice_trouve])
                     score_total += score_obtenu
-                    details.append(f"Automatique - {critere} ({reponses[idx]}) : {score_obtenu} points")
+                    details_calcul.append(f"Automatique - {critere} ({reponses_possibles[indice_trouve]}) : {score_obtenu} points")
             continue 
 
-        # Traitement automatisé de la Hauteur d'eau
         if critere == "Hauteur d'eau potentielle":
             if dans_zich:
-                H = hmax_zich - niveau_plancher
+                hauteur_dans_logement = hmax_zich - niveau_plancher
                 
-                idx_regle = -1
-                if H >= 0.2 and 'h >= 0.2' in reponses:
-                    idx_regle = reponses.index('h >= 0.2')
-                elif H < 0.2 and 'h <= 0.2' in reponses:
-                    idx_regle = reponses.index('h <= 0.2')
+                indice_regle = -1
+                if hauteur_dans_logement >= 0.2 and 'h >= 0.2' in reponses_possibles:
+                    indice_regle = reponses_possibles.index('h >= 0.2')
+                elif hauteur_dans_logement < 0.2 and 'h <= 0.2' in reponses_possibles:
+                    indice_regle = reponses_possibles.index('h <= 0.2')
                     
-                if idx_regle != -1:
-                    score_calc = float(scores[idx_regle])
-                    score_total += score_calc
-                    details.append(f"Automatique - Eau dans le logement ({H:.2f} m) : {score_calc} points")
+                if indice_regle != -1:
+                    score_calcule = float(scores[indice_regle])
+                    score_total += score_calcule
+                    details_calcul.append(f"Automatique - Eau dans le logement ({hauteur_dans_logement:.2f} m) : {score_calcule} points")
             continue 
 
-        # Traitement automatisé de la Question 21 (Chauffage vs Crue)
-        if prefix == 'logement' and qid == 21:
-            valeur_q20 = user_answers_text.get(('logement', 20))
-            if valeur_q20 and dans_zich:
+        # Vérification automatique si l'équipement de chauffage est submergé
+        if prefixe == 'logement' and id_question == 21:
+            valeur_hauteur_equipement = reponses_utilisateur.get(('logement', 20))
+            if valeur_hauteur_equipement and dans_zich:
                 try:
-                    h_equipement = float(valeur_q20)
+                    hauteur_equip = float(valeur_hauteur_equipement)
                     
-                    # Indice 0 = au-dessus (0 pts), Indice 1 = en-dessous (10 pts)
-                    idx_auto = 1 if h_equipement < hmax_zich else 0
+                    # 0 = au-dessus (0 pts), 1 = en-dessous (10 pts)
+                    indice_auto = 1 if hauteur_equip < hmax_zich else 0
                     
-                    score_calc = float(scores[idx_auto])
-                    score_total += score_calc
+                    score_calcule = float(scores[indice_auto])
+                    score_total += score_calcule
                     
-                    texte_reponse = reponses[idx_auto]
-                    texte_reco = recommandations[idx_auto] if recommandations and len(recommandations) > idx_auto else ""
+                    texte_reponse = reponses_possibles[indice_auto]
+                    texte_reco = recommandations[indice_auto] if recommandations and len(recommandations) > indice_auto else ""
                     
-                    details.append(f"Automatique - Chauffage : {texte_reponse} (Equipement: {h_equipement}m vs Crue: {hmax_zich:.2f}m)")
+                    details_calcul.append(f"Automatique - Chauffage : {texte_reponse} (Equipement: {hauteur_equip}m vs Crue: {hmax_zich:.2f}m)")
                     
-                    rappel_qr.append({
-                        'question': q['question'],
+                    rappel_questions_reponses.append({
+                        'question': question['question'],
                         'reponse': texte_reponse,
                         'recommandation': texte_reco
                     })
                     
-                    if texte_reco and texte_reco not in recommandations_groupees[prefix]:
-                        recommandations_groupees[prefix].append(texte_reco)
+                    if texte_reco and texte_reco not in recommandations_groupees[prefixe]:
+                        recommandations_groupees[prefixe].append(texte_reco)
                 except ValueError:
                     pass
             continue
 
-        # Traitement normal pour les autres questions
-        input_name = f"rep_{prefix}_{qid}"
-        user_answer = request.args.get(input_name)
+        # --- Traitement standard pour les autres questions manuelles ---
+        nom_champ = f"rep_{prefixe}_{id_question}"
+        reponse_fournie = request.args.get(nom_champ)
         
-        if user_answer is not None and str(user_answer).strip() != '':
+        if reponse_fournie is not None and str(reponse_fournie).strip() != '':
             texte_reponse = ""
             texte_reco = ""
             
-            if len(reponses) == 1 and reponses[0] == 'x':
+            # S'il y a eu une valeur numérique saisie (champ libre "x")
+            if len(reponses_possibles) == 1 and reponses_possibles[0] == 'x':
                 try:
-                    reponse_float = float(user_answer)
-                    if prefix == 'zone' and critere == 'Niveau du plancher':
-                        niveau_plancher = reponse_float
-                    texte_reponse = f"{reponse_float} m"
-                    details.append(f"{critere} : {reponse_float} m")
+                    reponse_decimale = float(reponse_fournie)
+                    if prefixe == 'zone' and critere == 'Niveau du plancher':
+                        niveau_plancher = reponse_decimale
+                    texte_reponse = f"{reponse_decimale} m"
+                    details_calcul.append(f"{critere} : {reponse_decimale} m")
                     texte_reco = recommandations[0] if recommandations and len(recommandations) > 0 else ""
                 except ValueError:
                     pass
             else:
+                # Choix dans une liste déroulante
                 try:
-                    index = int(user_answer)
-                    texte_reponse = reponses[index]
-                    score_obtenu = float(scores[index])
+                    indice = int(reponse_fournie)
+                    texte_reponse = reponses_possibles[indice]
+                    score_obtenu = float(scores[indice])
                     
                     score_total += score_obtenu
-                    details.append(f"{critere} ({texte_reponse}) : {score_obtenu} points")
-                    texte_reco = recommandations[index] if recommandations and len(recommandations) > index else ""
+                    details_calcul.append(f"{critere} ({texte_reponse}) : {score_obtenu} points")
+                    texte_reco = recommandations[indice] if recommandations and len(recommandations) > indice else ""
                 except (ValueError, IndexError):
                     pass
 
             if texte_reponse:
-                rappel_qr.append({
-                    'question': q['question'],
+                rappel_questions_reponses.append({
+                    'question': question['question'],
                     'reponse': texte_reponse,
                     'recommandation': texte_reco
                 })
                 
-                if texte_reco and texte_reco not in recommandations_groupees[prefix]:
-                    recommandations_groupees[prefix].append(texte_reco)
+                if texte_reco and texte_reco not in recommandations_groupees[prefixe]:
+                    recommandations_groupees[prefixe].append(texte_reco)
 
 
-    # Préparation de la liste finale pour le template
+    # Mise en forme finale des recommandations
     recommandations_finales = []
-    for pref, recos in recommandations_groupees.items():
-        if recos: 
+    for categorie_pref, liste_recos in recommandations_groupees.items():
+        if liste_recos: 
             recommandations_finales.append({
-                'titre': noms_categories[pref],
-                'recos': recos
+                'titre': noms_categories[categorie_pref],
+                'recos': liste_recos
             })
 
-    # 3. Affichage des couleurs et du score
+    # Calcul d'un pourcentage pour le score global et création d'une couleur (vert vers rouge)
     if score_max_dynamique > 0:
-        score_cent = (score_total / score_max_dynamique) * 100
+        score_pourcentage = (score_total / score_max_dynamique) * 100
     else:
-        score_cent = 0.0
+        score_pourcentage = 0.0
         
-    score_cent = max(0, min(100, int(round(score_cent))))
-    hue = max(0, 120 - (score_cent * 1.2))
-    couleur_score = f"hsl({hue}, 100%, 40%)"
+    score_pourcentage = max(0, min(100, int(round(score_pourcentage))))
+    teinte_couleur = max(0, 120 - (score_pourcentage * 1.2))
+    couleur_score = f"hsl({teinte_couleur}, 100%, 40%)"
     
-    # SAUVEGARDE DU SCORE GLOBAUX POUR LES STATISTIQUES
+    # Enregistrement du score global pour nos statistiques
     try:
-        cur.execute("INSERT INTO public.scores_questionnaires (score) VALUES (%s)", (score_cent,))
-    except Exception as e:
-        print(f"Erreur d'insertion du score global : {e}")
+        curseur.execute("INSERT INTO public.scores_questionnaires (score) VALUES (%s)", (score_pourcentage,))
+    except Exception as erreur:
+        print(f"Erreur d'insertion du score global : {erreur}")
     
-    geom_json = json.dumps(geom) if geom else 'null'
+    # Sérialisation des polygones pour la carte sur l'interface
+    geometrie_json = json.dumps(geometries_zich) if geometries_zich else 'null'
 
     return render_template('calcul.html', 
                        nom=nom_utilisateur,
                        score_total=round(score_total, 2),
-                       score_cent=score_cent,
+                       score_cent=score_pourcentage,
                        couleur_score=couleur_score,
-                       details=details,
-                       lon=lon,          
-                       lat=lat,     
+                       details=details_calcul,
+                       lon=longitude,          
+                       lat=latitude,     
                        adresse=adresse_complete,   
                        dans_zich=dans_zich,
                        hmax_zich=round(hmax_zich, 2) if hmax_zich else 0, 
                        zone_choisie_texte=zone_choisie_texte,
-                       geom=geom_json,
+                       geom=geometrie_json,
                        recommandations_finales=recommandations_finales,
-                       rappel_qr=rappel_qr)
+                       rappel_qr=rappel_questions_reponses)
 
 
 @app.route('/statistiques')
 def statistiques():
-    questions_zone, questions_logement, questions_protection, _ = get_questions()
+    questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
     
-    # On ne garde que les questions marquées TRUE dans la colonne "inclure_stats"
+    # On ne garde que les questions configurées pour apparaître dans les statistiques
     questions_zone = [q for q in questions_zone if q.get('inclure_stats') is True]
     questions_logement = [q for q in questions_logement if q.get('inclure_stats') is True]
     questions_protection = [q for q in questions_protection if q.get('inclure_stats') is True]
     
     categorie = request.args.get('categorie', 'logement')
     
-    stats = []
+    statistiques_reponses = []
     question_texte = "Question introuvable"
-    question_id = 0
-    moyenne = None
-    total = 0
+    id_question = 0
+    moyenne_scores = None
+    total_participants = 0
     
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if categorie == 'global':
-        # On calcule simplement la moyenne et le nombre de questionnaires complétés
+        # On calcule simplement la moyenne de tous les questionnaires complétés
         try:
-            cur.execute("SELECT ROUND(AVG(score), 1) AS moyenne, COUNT(*) AS total FROM public.scores_questionnaires")
-            data = cur.fetchone()
-            moyenne = data['moyenne'] if data and data['moyenne'] is not None else None
-            total = data['total'] if data else 0
+            curseur.execute("SELECT ROUND(AVG(score), 1) AS moyenne, COUNT(*) AS total FROM public.scores_questionnaires")
+            donnees = curseur.fetchone()
+            moyenne_scores = donnees['moyenne'] if donnees and donnees['moyenne'] is not None else None
+            total_participants = donnees['total'] if donnees else 0
             question_texte = "Moyenne globale"
-        except Exception as e:
-            print(f"Erreur SQL stats globales: {e}")
+        except Exception as erreur:
+            print(f"Erreur SQL lors du calcul des statistiques globales: {erreur}")
             
     else:
-        # Définir l'ID par défaut sur la première question de la catégorie choisie
-        default_id = 1
+        # On définit un ID par défaut sur la première question de la catégorie choisie
+        id_par_defaut = 1
         if categorie == 'logement' and questions_logement:
-            default_id = questions_logement[0]['id']
+            id_par_defaut = questions_logement[0]['id']
         elif categorie == 'zone' and questions_zone:
-            default_id = questions_zone[0]['id']
+            id_par_defaut = questions_zone[0]['id']
         elif categorie == 'protection' and questions_protection:
-            default_id = questions_protection[0]['id']
+            id_par_defaut = questions_protection[0]['id']
             
-        question_id = request.args.get('id', default_id, type=int)
+        id_question = request.args.get('id', id_par_defaut, type=int)
         
         if categorie == 'logement':
-            table_name = "public.questions_logement"
+            nom_table = "public.questions_logement"
         elif categorie == 'protection':
-            table_name = "public.protection_personnes"
+            nom_table = "public.protection_personnes"
         else:
-            table_name = "public.zone_inondable"
+            nom_table = "public.zone_inondable"
             
         try:
-            cur.execute(f"SELECT question FROM {table_name} WHERE id = %s", (question_id,))
-            result = cur.fetchone()
-            if result:
-                question_texte = result['question']
+            curseur.execute(f"SELECT question FROM {nom_table} WHERE id = %s", (id_question,))
+            resultat = curseur.fetchone()
+            if resultat:
+                question_texte = resultat['question']
                 
-            # Requête pour calculer les statistiques
-            query = """
+            # Cette requête récupère la répartition des réponses pour une question donnée
+            requete_sql = """
                 SELECT 
                     reponse_donnee AS reponse,
                     COUNT(*) AS compte,
@@ -449,18 +456,18 @@ def statistiques():
                 ORDER BY 
                     compte DESC;
             """
-            cur.execute(query, (categorie, question_id))
-            stats = cur.fetchall()
-        except Exception as e:
-            print(f"Erreur SQL stats questions: {e}")
+            curseur.execute(requete_sql, (categorie, id_question))
+            statistiques_reponses = curseur.fetchall()
+        except Exception as erreur:
+            print(f"Erreur SQL lors du calcul des statistiques spécifiques: {erreur}")
 
     return render_template('statistiques.html', 
-                           stats=stats, 
+                           stats=statistiques_reponses, 
                            question_texte=question_texte, 
-                           id=question_id, 
+                           id=id_question, 
                            categorie=categorie,
-                           moyenne=moyenne,
-                           total=total,
+                           moyenne=moyenne_scores,
+                           total=total_participants,
                            questions_zone=questions_zone,
                            questions_logement=questions_logement,
                            questions_protection=questions_protection,
@@ -468,33 +475,34 @@ def statistiques():
 
 @app.route('/avis', methods=['GET', 'POST'])
 def avis():
-    # On récupère le mode depuis l'URL (GET)
+    # On regarde d'où vient l'utilisateur (URL)
     mode = request.args.get('mode', '')
     
     if request.method == 'POST':
         commentaire = request.form.get('commentaire')
         note = request.form.get('note')
-        # On récupère le mode depuis le formulaire (POST)
-        mode_form = request.form.get('mode', '')
+        
+        # Mode soumis dans le formulaire
+        mode_formulaire = request.form.get('mode', '')
         
         if commentaire and note:
             try:
-                cur = conn.cursor()
-                cur.execute(
+                curseur = conn.cursor()
+                curseur.execute(
                     "INSERT INTO public.avis (commentaire, note) VALUES (%s, %s)",
                     (commentaire.strip(), int(note))
                 )
-            except Exception as e:
-                print(f"Erreur d'insertion d'avis: {e}")
+            except Exception as erreur:
+                print(f"Erreur d'insertion d'un nouvel avis: {erreur}")
                 
-        # Si on vient de la fin du parcours, on renvoie à l'accueil après soumission
-        if mode_form == 'fin_parcours':
+        # Si on vient de la fin du questionnaire, on le renvoie à l'accueil
+        if mode_formulaire == 'fin_parcours':
             return redirect(url_for('accueil'))
         return redirect(url_for('avis'))
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-    cur.execute("SELECT commentaire, note, date_avis FROM public.avis ORDER BY date_avis DESC")
-    liste_avis = cur.fetchall()
+    curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    curseur.execute("SELECT commentaire, note, date_avis FROM public.avis ORDER BY date_avis DESC")
+    liste_avis = curseur.fetchall()
 
     # On passe la variable "mode" au template
     return render_template('avis.html', liste_avis=liste_avis, now=datetime.now(), mode=mode)
