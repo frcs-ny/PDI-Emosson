@@ -119,10 +119,10 @@ docker compose exec -t db pg_dump --inserts -U postgres -d mydb > "./db/backup.s
 
 ### Structure des tables SQL du questionnaire 
 
-Les tables qui constituent le questionnaire suivent ce paterne : 
+Les tables qui constituent le questionnaire suivent ce motif : 
 
 | id               | critere | question  | reponse | scores_vunerabilite | a_dependance| id_question_liee |recommandations |inclure_stats|
-| -----------------| --------| --------- | --------| ----------------    | ------------| ---------------- | ---------------|---------------|
+| -----------------| --------| --------- | ---------------| ----------------    | ------------| ---------------- | ---------------|---------------|
 | Rang de la question     | Le critére d'appartenance sous forme de str   |   L'intitulé de la question sous forme de str      | réponses possibles à la question sous forme "d'array". Mettre seulement "x" s'il s'agit d'une valeur à renseigner | Score par réponse. A renseigner sous forme d'array de même taille que question avec les index correspondant à chaque question. | Indication d'interdépendance d'une question. Mettre "true" la question dépends d'une autre (question fille) | Rang de la question Mére | Recommandations sous forme d'array de str ({str}) suivant la même taille et le même index que la colonne question  | Boléen qui précise si une question doit faire partie la comptabilité des statistiques |
 
 ### Ajout de question 
