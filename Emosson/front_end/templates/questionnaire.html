@@ -46,7 +46,7 @@
                     <p>
                         {{ etape.question }}
                         {% if etape.type == 'select' %}
-                        <select name="{{ etape.name }}" required class="step-input">
+                        <select name="{{ etape.name }}" required class="etape_i">
                             <option value="" disabled selected>-- Choisir --</option>
                             {% for index, rep in etape.options %}
                             <option value="{{ index }}">{{ rep }}</option>
@@ -59,7 +59,7 @@
                                step="0.01"
                                placeholder="{{ etape.placeholder }}"
                                required
-                               class="step-input">
+                               class="etape_i">
 
                         {% else %}
                         <input type="text"
@@ -67,7 +67,7 @@
                                placeholder="{{ etape.placeholder }}"
                                {% if etape.pattern %}pattern="{{ etape.pattern }}"{% endif %}
                                required
-                               class="step-input">
+                               class="etape_i">
                         {% endif %}
                     </p>
                 </div>
@@ -96,20 +96,20 @@
     <script>
     document.addEventListener("DOMContentLoaded", function() {
 
-        const steps           = document.querySelectorAll('.critere-block');
+        const critere           = document.querySelectorAll('.critere-block');
         const bouton_precedent = document.getElementById('bouton_prec');
         const bouton_suivant  = document.getElementById('bouton_suiv');
         const bouton_valider  = document.getElementById('bouton_valider');
         const progressBar     = document.getElementById('globalProgress');
         const form            = document.getElementById('diagnostic_form');
 
-        const totalSteps = steps.length;
-        let currentStep = 0;
+        const nb_criteres = critere.length;
+        let critere_i = 0;
 
         
         function isStepActive(index) {
             //détermine si une question doit être affichée ou sautée
-            const step = steps[index];
+            const step = critere[index];
             const parentName = step.getAttribute('data-parent');
             
             //Si pas de parent, la question est toujours active
@@ -133,13 +133,13 @@
 
         //MISE à jour de L'UI
         function updateUI() {
-            let activeStepsCount = 0;
+            let compteur = 0;
             let currentActiveIndex = 0;
-            let lastActiveIndex = -1;
+            let last_index_active = -1;
 
             
-            steps.forEach(function(step, i) {
-                const input = step.querySelector('.step-input');
+            critere.forEach(function(step, i) {
+                const input = step.querySelector('.etape_i');
                 const isActive = isStepActive(i);
 
                 if (!isActive) {
@@ -148,15 +148,15 @@
                     step.classList.remove('unlocking');
                     step.classList.add('locked');
                 } else {
-                    activeStepsCount++;
+                    compteur+=1;
                     input.setAttribute('required', 'required');
                     step.style.display = ''; 
-                    lastActiveIndex = i;
+                    last_index_active = i;
 
-                    if (i === currentStep) {
+                    if (i === critere_i) {
                         step.classList.remove('locked');
                         step.classList.add('unlocking');
-                        currentActiveIndex = activeStepsCount;
+                        indice_i = compteur;
                     } else {
                         step.classList.remove('unlocking');
                         step.classList.add('locked');
@@ -166,18 +166,18 @@
 
             //barre de progresssion
             let progressPct = 0;
-            if (activeStepsCount > 1) {
-                progressPct = ((currentActiveIndex - 1) / (activeStepsCount - 1)) * 100;
+            if (compteur > 1) {
+                progressPct = ((indice_i - 1) / (compteur - 1)) * 100;
             } else {
                 progressPct = 100;
             }
             progressBar.style.width = progressPct + '%';
 
           
-            bouton_precedent.style.display = (currentActiveIndex <= 1) ? 'none' : 'inline-block';
+            bouton_precedent.style.display = (indice_i <= 1) ? 'none' : 'inline-block';
 
             //afficher le bouton calculer à la fin
-            if (currentStep === lastActiveIndex) {
+            if (critere_i === last_index_active) {
                 bouton_suivant.style.display = 'none';
                 bouton_valider.style.display = 'inline-block';
             } else {
@@ -189,56 +189,56 @@
         }
 
         function checkValidity() {
-            const currentInput = steps[currentStep].querySelector('.step-input');
+            const currentInput = critere[critere_i].querySelector('.etape_i');
             const isValid = currentInput.checkValidity() && currentInput.value.trim() !== '';
 
             bouton_suivant.disabled = !isValid;
 
             
-            let lastActiveIndex = -1;
-            for (let i = totalSteps - 1; i >= 0; i--) {
+            let last_index_active = -1;
+            for (let i = nb_criteres - 1; i >= 0; i-=1) {
                 if (isStepActive(i)) {
-                    lastActiveIndex = i;
+                    last_index_active = i;
                     break;
                 }
             }
 
-            if (currentStep === lastActiveIndex) {
+            if (critere_i === last_index_active) {
                 bouton_valider.disabled = !isValid;
             }
         }
 
         
         function goNext() {
-            let nextIndex = currentStep + 1;
+            let nextIndex = critere_i + 1;
            
-            while (nextIndex < totalSteps && !isStepActive(nextIndex)) {
+            while (nextIndex < nb_criteres && !isStepActive(nextIndex)) {
                 
-                const input = steps[nextIndex].querySelector('.step-input');
+                const input = critere[nextIndex].querySelector('.etape_i');
                 if (input) input.value = "";
-                nextIndex++;
+                nextIndex+=1;
             }
-            if (nextIndex < totalSteps) {
-                currentStep = nextIndex;
+            if (nextIndex < nb_criteres) {
+                critere_i = nextIndex;
                 updateUI();
             }
         }
 
         //bouton précédent
         function goPrev() {
-            let prevIndex = currentStep - 1;
+            let prevIndex = critere_i - 1;
             while (prevIndex >= 0 && !isStepActive(prevIndex)) {
                 prevIndex--;
             }
             if (prevIndex >= 0) {
-                currentStep = prevIndex;
+                critere_i = prevIndex;
                 updateUI();
             }
         }
 
         
-        steps.forEach(function(step) {
-            const input = step.querySelector('.step-input');
+        critere.forEach(function(step) {
+            const input = step.querySelector('.etape_i');
 
             input.addEventListener('input', checkValidity);
 
@@ -248,11 +248,11 @@
                 if (isSelect && input.checkValidity()) {
                     setTimeout(function() {
                         
-                        let lastActiveIndex = -1;
-                        for (let i = totalSteps - 1; i >= 0; i--) {
-                            if (isStepActive(i)) { lastActiveIndex = i; break; }
+                        let last_index_active = -1;
+                        for (let i = nb_criteres - 1; i >= 0; i-=1) {
+                            if (isStepActive(i)) { last_index_active = i; break; }
                         }
-                        if (currentStep < lastActiveIndex) {
+                        if (critere_i < last_index_active) {
                             goNext();
                         }
                     }, 300); 
@@ -262,14 +262,14 @@
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    let lastActiveIndex = -1;
-                    for (let i = totalSteps - 1; i >= 0; i--) {
-                        if (isStepActive(i)) { lastActiveIndex = i; break; }
+                    let last_index_active = -1;
+                    for (let i = nb_criteres - 1; i >= 0; i-=1) {
+                        if (isStepActive(i)) { last_index_active = i; break; }
                     }
 
-                    if (!bouton_suivant.disabled && currentStep < lastActiveIndex) {
+                    if (!bouton_suivant.disabled && critere_i < last_index_active) {
                         goNext();
-                    } else if (currentStep === lastActiveIndex && !bouton_valider.disabled) {
+                    } else if (critere_i === last_index_active && !bouton_valider.disabled) {
                         form.submit();
                     }
                 }

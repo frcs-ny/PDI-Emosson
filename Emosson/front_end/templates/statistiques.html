@@ -32,7 +32,7 @@
                     
                     <div>
                         <label for="categorie" style="display: block; margin-bottom: 5px;">Catégorie :</label>
-                        <select name="categorie" id="categorie" class="step-input" style="width: auto; margin-bottom: 0;">
+                        <select name="categorie" id="categorie" class="etape_i" style="width: auto; margin-bottom: 0;">
                             <option value="logement" {% if categorie == 'logement' %}selected{% endif %}>Logement</option>
                             <option value="zone" {% if categorie == 'zone' %}selected{% endif %}>Zone inondable</option>
                             <option value="protection" {% if categorie == 'protection' %}selected{% endif %}>Protection</option>
@@ -42,7 +42,7 @@
                     
                     <div style="flex-grow: 1; min-width: 250px;">
                         <label for="id" style="display: block; margin-bottom: 5px;">Question :</label>
-                        <select name="id" id="question_select" class="step-input" style="width: 100%; margin-bottom: 0;" required>
+                        <select name="id" id="question_select" class="etape_i" style="width: 100%; margin-bottom: 0;" required>
                             </select>
                     </div>
                     
