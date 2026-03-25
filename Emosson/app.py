@@ -1,3 +1,8 @@
+"""
+Module principal de l'application Flask Emosson.
+Gère les routes web, la communication avec la base de données PostgreSQL,
+et la logique métier (calcul de vulnérabilité, géocodage, analyse spatiale ZICH).
+"""
 from flask import Flask, render_template, request, redirect, url_for
 from datetime import datetime
 import psycopg2
@@ -13,12 +18,20 @@ app = Flask(
     static_folder='front_end/static'
 )
 
-# connexion à la BDD
+# Initialisation de la connexion globale à la base de données
 conn = psycopg2.connect(os.environ.get('DATABASE_URL'))
 conn.autocommit = True
 
-# Requetes SQL pour récupérer les questions
 def recuperer_questions():
+    """
+    Récupère l'ensemble des questions depuis les tables de la base de données.
+    Assigne un préfixe à chaque catégorie et calcule le score maximum théorique.
+
+    Returns:
+        tuple: (questions_zone, questions_logement, questions_protection, score_max_theorique)
+            - Listes de dictionnaires contenant les données des questions par catégorie.
+            - Float représentant le score de vulnérabilité maximum théorique.
+    """
     curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     curseur.execute("SELECT id, critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats FROM public.zone_inondable ORDER BY id")
@@ -39,12 +52,13 @@ def recuperer_questions():
     score_max_theorique = 0.0
     toutes_les_questions = questions_zone + questions_logement + questions_protection
     
-    # On calcule le score maximum qu'un utilisateur pourrait théoriquement atteindre
+    # Calcul du score maximum qu'un utilisateur pourrait théoriquement atteindre
+    # en additionnant la valeur maximale de chaque tableau de scores.
     for question in toutes_les_questions:
         scores = question.get('scores_vulnerabilite')
         if scores:
             try:
-                # On convertit les scores en nombres décimaux en ignorant les valeurs vides
+                # Conversion des scores en décimaux en ignorant les valeurs nulles
                 scores_valides = [float(score) for score in scores if score is not None]
                 if scores_valides:
                     score_max_theorique += max(scores_valides)
@@ -57,18 +71,39 @@ def recuperer_questions():
 @app.route('/')
 @app.route('/accueil')
 def accueil():
+    """
+    Route pour la page d'accueil de l'application.
+    """
     return render_template('accueil.html', now=datetime.now())
 
 @app.route('/actualite')
 def actualite():
+    """
+    Route pour la page des actualités liées aux risques d'inondation.
+    """
     return render_template('actualite.html', now=datetime.now())
 
 @app.route('/qui_sommes_nous')
 def qui_sommes_nous():
+    """
+    Route pour la page de présentation du projet et de l'équipe.
+    """
     return render_template('qui_sommes_nous.html', now=datetime.now())
 
 @app.route('/questionnaire')
 def questionnaire():
+    """
+    Route préparant et affichant le formulaire du diagnostic.
+    
+    - Agrège les questions de base (identité, adresse).
+    - Récupère les questions dynamiques depuis la base de données.
+    - Détermine le type de champ HTML à afficher (select ou number) en fonction
+      des réponses attendues (ex: 'x' indique une saisie libre numérique).
+    - Exclut les questions calculées automatiquement (ex: hauteur d'eau).
+
+    Returns:
+        Template HTML rendu avec la liste structurée des étapes.
+    """
     questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
 
     # Etapes de base (informations utilisateur)
@@ -81,7 +116,8 @@ def questionnaire():
 
     toutes_les_questions = questions_zone + questions_logement + questions_protection
     for question in toutes_les_questions:
-        # On ignore les questions qui sont calculées automatiquement (dont la 21)
+        # Exclusion des questions déduites automatiquement lors du calcul final
+        # (ex: appartenance à une zone inondable, évaluation hauteur vs équipement).
         if question['critere'] in ["Hauteur d'eau potentielle", "Zone inondable"] or (question['prefix'] == 'logement' and question['id'] == 21):
             continue
 
@@ -98,11 +134,11 @@ def questionnaire():
             'parent_name': nom_parent
         }
 
-        # Si la seule réponse possible est "x", c'est qu'on attend un nombre
+        # Détection du type de champ: la valeur unique 'x' signifie une saisie numérique
         if len(reponses) == 1 and reponses[0] == 'x':
             etape_base.update({'type': 'number', 'placeholder': 'Ex: 0.50 m'})
         else:
-            # Sinon on propose une liste déroulante
+            # Choix multiples présentés sous forme de menu déroulant (select)
             etape_base.update({'type': 'select', 'options': list(enumerate(reponses))})
             
         etapes.append(etape_base)
@@ -112,6 +148,16 @@ def questionnaire():
 
 @app.route('/calcul')
 def calcul():
+    """
+    Route de traitement des résultats du questionnaire.
+    
+    Effectue séquentiellement :
+    1. Le géocodage de l'adresse saisie via l'API adresse.data.gouv.
+    2. L'interrogation de l'API Vigicrues pour évaluer le risque de submersion (ZICH).
+    3. L'enregistrement asynchrone des réponses en base de données.
+    4. Le calcul du score de vulnérabilité (incluant les règles automatiques).
+    5. La compilation et le regroupement des recommandations ciblées.
+    """
     questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
     toutes_les_questions_bdd = questions_zone + questions_logement + questions_protection
     
@@ -121,7 +167,7 @@ def calcul():
     if not nom_utilisateur:
         nom_utilisateur = 'Utilisateur inconnu'
         
-    # On structure les recommandations par catégories pour l'affichage final
+    # Structuration des recommandations par catégorie pour le rapport final
     recommandations_groupees = {
         'zone': [],
         'logement': [],
@@ -149,12 +195,12 @@ def calcul():
 
     if adresse_complete:
         try:
-            # Etape 1 : Obtenir les coordonnées GPS depuis l'adresse
+            # ÉTAPE 1 : Obtenir les coordonnées GPS depuis l'adresse
             resultat_coordonnees = adresse_vers_coordonnees(adresse_complete)
             longitude = resultat_coordonnees['lon']
             latitude = resultat_coordonnees['lat']
             
-            # Etape 2 : Chercher si l'adresse est dans une zone inondable (ZICH)
+            # ÉTAPE 2 : Analyse spatiale par rapport aux zones inondables ZICH (Vigicrues)
             liste_stations = recuperer_info_toutes_les_station()
             code_station, nom_station = trouver_station_plus_proche(liste_stations, longitude, latitude)
             hauteur_max_station, geom_brute_zich = recuperer_geom_zich(code_station)
@@ -178,7 +224,7 @@ def calcul():
             details_calcul.append(f"⚠️ Erreur lors de l'analyse de l'adresse. ({erreur})")
 
 
-    # Sauvegarde des réponses de l'utilisateur en base de données
+    # ÉTAPE 3 : Sauvegarde des réponses brutes de l'utilisateur en base de données
     reponses_utilisateur = {}
     curseur = conn.cursor()
     
@@ -200,7 +246,6 @@ def calcul():
                 except (ValueError, IndexError):
                     pass
             
-            # Insertion en base de données
             if texte_a_sauvegarder:
                 try:
                     curseur.execute(
@@ -210,7 +255,7 @@ def calcul():
                 except Exception as erreur:
                     print(f"Erreur d'insertion en BDD: {erreur}")
 
-    # Calcul des scores du questionnaire
+    # ÉTAPE 4 : Calcul des scores et application des règles automatiques
     score_total = 0.0
     score_max_dynamique = 0.0
     
@@ -222,13 +267,13 @@ def calcul():
         scores = question['scores_vulnerabilite']
         recommandations = question.get('recommandations', [])
         
-        # Gestion des questions dépendantes (on l'ignore si la question parente a été répondue par "Non")
+        # Ignorer l'évaluation des questions dépendantes si la condition parente n'est pas remplie
         if question.get('a_dependance') and question.get('id_question_liee'):
             reponse_parente = reponses_utilisateur.get((prefixe, question['id_question_liee']))
             if not reponse_parente or reponse_parente.strip().lower() == 'non':
                 continue
                 
-        # Mise à jour du score maximum que l'utilisateur aurait pu avoir
+        # Mise à jour du score maximum atteignable (sert à la pondération finale en pourcentage)
         try:
             scores_valides = [float(s) for s in scores if s is not None]
             if scores_valides:
@@ -236,7 +281,7 @@ def calcul():
         except (ValueError, TypeError):
             pass
             
-        # --- Traitement automatique des risques d'inondation ---
+        # --- Règles d'évaluation automatiques liées à la géolocalisation ZICH ---
         if critere == 'Zone inondable':
             if dans_zich and zone_choisie_texte != '':
                 indice_trouve = -1
@@ -297,7 +342,7 @@ def calcul():
                     pass
             continue
 
-        # --- Traitement standard pour les autres questions manuelles ---
+        # --- Traitement standard des réponses saisies par l'utilisateur ---
         nom_champ = f"rep_{prefixe}_{id_question}"
         reponse_fournie = request.args.get(nom_champ)
         
@@ -340,7 +385,7 @@ def calcul():
                     recommandations_groupees[prefixe].append(texte_reco)
 
 
-    # Mise en forme finale des recommandations
+    # ÉTAPE 5 : Finalisation, calcul du score en pourcentage et rendu
     recommandations_finales = []
     for categorie_pref, liste_recos in recommandations_groupees.items():
         if liste_recos: 
@@ -349,7 +394,7 @@ def calcul():
                 'recos': liste_recos
             })
 
-    # Calcul d'un pourcentage pour le score global et création d'une couleur (vert vers rouge)
+    # Calcul du score normalisé sur 100 et détermination de sa couleur (Gradient Dynamique Vert -> Rouge)
     if score_max_dynamique > 0:
         score_pourcentage = (score_total / score_max_dynamique) * 100
     else:
@@ -359,13 +404,13 @@ def calcul():
     teinte_couleur = max(0, 120 - (score_pourcentage * 1.2))
     couleur_score = f"hsl({teinte_couleur}, 100%, 40%)"
     
-    # Enregistrement du score global pour nos statistiques
+    # Enregistrement du score global agrégé pour le module de statistiques
     try:
         curseur.execute("INSERT INTO public.scores_questionnaires (score) VALUES (%s)", (score_pourcentage,))
     except Exception as erreur:
         print(f"Erreur d'insertion du score global : {erreur}")
     
-    # Sérialisation des polygones pour la carte sur l'interface
+    # Sérialisation des données géométriques au format JSON pour l'affichage cartographique via Leaflet
     geometrie_json = json.dumps(geometries_zich) if geometries_zich else 'null'
 
     return render_template('calcul.html', 
@@ -387,9 +432,18 @@ def calcul():
 
 @app.route('/statistiques')
 def statistiques():
+    """
+    Route gérant le tableau de bord des statistiques d'utilisation.
+    
+    Permet d'afficher :
+    - Soit des statistiques globales (moyenne des scores de tous les formulaires).
+    - Soit la répartition quantitative des réponses pour une question spécifique.
+    
+    Filtre automatiquement les questions avec le marqueur 'inclure_stats' à False.
+    """
     questions_zone, questions_logement, questions_protection, _ = recuperer_questions()
     
-    # On ne garde que les questions configurées pour apparaître dans les statistiques
+    # Filtrage : On ne conserve que les questions autorisées pour l'affichage public
     questions_zone = [q for q in questions_zone if q.get('inclure_stats') is True]
     questions_logement = [q for q in questions_logement if q.get('inclure_stats') is True]
     questions_protection = [q for q in questions_protection if q.get('inclure_stats') is True]
@@ -405,7 +459,7 @@ def statistiques():
     curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     if categorie == 'global':
-        # On calcule simplement la moyenne de tous les questionnaires complétés
+        # Récupération de la moyenne globale et du nombre total de diagnostics effectués
         try:
             curseur.execute("SELECT ROUND(AVG(score), 1) AS moyenne, COUNT(*) AS total FROM public.scores_questionnaires")
             donnees = curseur.fetchone()
@@ -416,7 +470,7 @@ def statistiques():
             print(f"Erreur SQL lors du calcul des statistiques globales: {erreur}")
             
     else:
-        # On définit un ID par défaut sur la première question de la catégorie choisie
+        # Détermination de l'ID par défaut (première question) pour la catégorie courante
         id_par_defaut = 1
         if categorie == 'logement' and questions_logement:
             id_par_defaut = questions_logement[0]['id']
@@ -440,7 +494,7 @@ def statistiques():
             if resultat:
                 question_texte = resultat['question']
                 
-            # Cette requête récupère la répartition des réponses pour une question donnée
+            # Requête d'agrégation : calcule la fréquence absolue et relative (pourcentage) de chaque réponse
             requete_sql = """
                 SELECT 
                     reponse_donnee AS reponse,
@@ -475,14 +529,20 @@ def statistiques():
 
 @app.route('/avis', methods=['GET', 'POST'])
 def avis():
-    # On regarde d'où vient l'utilisateur (URL)
+    """
+    Route gérant le recueil des avis de la plateforme Emosson.
+    
+    - GET  : Récupère et affiche la liste de tous les avis enregistrés chronologiquement.
+    - POST : Insère un nouvel avis (note sur 5 + commentaire) en base de données.
+    """
+    # Paramètre indiquant la provenance de l'utilisateur (ex: redirigé depuis les résultats)
     mode = request.args.get('mode', '')
     
     if request.method == 'POST':
         commentaire = request.form.get('commentaire')
         note = request.form.get('note')
         
-        # Mode soumis dans le formulaire
+        # Récupération du mode via un champ caché dans la requête POST
         mode_formulaire = request.form.get('mode', '')
         
         if commentaire and note:
@@ -495,16 +555,16 @@ def avis():
             except Exception as erreur:
                 print(f"Erreur d'insertion d'un nouvel avis: {erreur}")
                 
-        # Si on vient de la fin du questionnaire, on le renvoie à l'accueil
+        # Redirection adaptative post-soumission
         if mode_formulaire == 'fin_parcours':
             return redirect(url_for('accueil'))
         return redirect(url_for('avis'))
 
+    # Traitement de la requête GET : Récupération chronologique (descendante) des avis
     curseur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     curseur.execute("SELECT commentaire, note, date_avis FROM public.avis ORDER BY date_avis DESC")
     liste_avis = curseur.fetchall()
 
-    # On passe la variable "mode" au template
     return render_template('avis.html', liste_avis=liste_avis, now=datetime.now(), mode=mode)
 
 if __name__ == '__main__':

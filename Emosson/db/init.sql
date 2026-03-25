@@ -1,3 +1,8 @@
+-- ==============================================================================
+-- Script d'initialisation de la base de données Emosson
+-- ==============================================================================
+
+-- 1. Nettoyage de la base : Suppression des tables existantes (et leurs dépendances)
 DROP TABLE IF EXISTS public.zone_inondable CASCADE;
 DROP TABLE IF EXISTS public.questions_logement CASCADE;
 DROP TABLE IF EXISTS public.protection_personnes CASCADE;
@@ -5,6 +10,9 @@ DROP TABLE IF EXISTS public.reponses_utilisateurs CASCADE;
 DROP TABLE IF EXISTS public.scores_questionnaires CASCADE;
 DROP TABLE IF EXISTS public.avis CASCADE;
 
+-- 2. Création des tables de questions du diagnostic
+
+-- Table pour la catégorie "Zone inondable" (questions sur l'environnement direct)
 CREATE TABLE public.zone_inondable (
     id SERIAL PRIMARY KEY,
     critere VARCHAR(255) NOT NULL,
@@ -17,6 +25,7 @@ CREATE TABLE public.zone_inondable (
     inclure_stats BOOLEAN DEFAULT TRUE
 );
 
+-- Table pour la catégorie "Aménagement du logement" (matériaux, équipements)
 CREATE TABLE public.questions_logement (
     id SERIAL PRIMARY KEY,
     critere VARCHAR(255) NOT NULL,
@@ -29,6 +38,7 @@ CREATE TABLE public.questions_logement (
     inclure_stats BOOLEAN DEFAULT TRUE
 );
 
+-- Table pour la catégorie "Protection des personnes" (préparation, organisation)
 CREATE TABLE public.protection_personnes (
     id SERIAL PRIMARY KEY,
     critere VARCHAR(255) NOT NULL,
@@ -41,6 +51,9 @@ CREATE TABLE public.protection_personnes (
     inclure_stats BOOLEAN DEFAULT TRUE
 );
 
+-- 3. Création des tables de stockage des données utilisateurs
+
+-- Table pour sauvegarder les réponses choisies par les utilisateurs
 CREATE TABLE public.reponses_utilisateurs (
     id SERIAL PRIMARY KEY,
     id_question INTEGER NOT NULL,
@@ -49,12 +62,14 @@ CREATE TABLE public.reponses_utilisateurs (
     date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table pour enregistrer l'historique des scores globaux (pour la page statistiques)
 CREATE TABLE public.scores_questionnaires (
     id SERIAL PRIMARY KEY,
     score INTEGER NOT NULL,
     date_saisie TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Table pour les retours d'expérience et notes du site
 CREATE TABLE public.avis (
     id SERIAL PRIMARY KEY,
     commentaire TEXT NOT NULL,
@@ -62,6 +77,11 @@ CREATE TABLE public.avis (
     date_avis TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- ==============================================================================
+-- 4. Insertion des données (Questions, choix de réponses, scores et recommandations)
+-- ==============================================================================
+
+-- Insertion des questions pour la table "zone_inondable"
 INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations, inclure_stats) VALUES
 
 -- Zone inondable (Exclue des stats)
@@ -87,7 +107,7 @@ INSERT INTO public.zone_inondable (critere, question, reponses, scores_vulnerabi
  ARRAY[-20, 0], FALSE, NULL, 
  ARRAY['', ''], FALSE);
 
-
+-- Insertion des questions pour la table "questions_logement"
 INSERT INTO public.questions_logement (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
 
 -- 1. Murs
@@ -252,7 +272,7 @@ INSERT INTO public.questions_logement (critere, question, reponses, scores_vulne
  ARRAY[0, 1], FALSE, NULL, 
  ARRAY['', '']);
 
-
+-- Insertion des questions pour la table "protection_personnes"
 INSERT INTO public.protection_personnes (critere, question, reponses, scores_vulnerabilite, a_dependance, id_question_liee, recommandations) VALUES
 
 -- Zone refuge

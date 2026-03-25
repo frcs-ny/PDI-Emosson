@@ -8,7 +8,7 @@ services:
       - .:/app 
     environment:
       - FLASK_APP=app.py       # Point d'entrée de l'application
-      - FLASK_DEBUG=1          # Activation du mode debug et rechargement à chaud
+      - FLASK_DEBUG=1          # Activation du mode debug 
       # URL de connexion à la base de données
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/mydb 
 
