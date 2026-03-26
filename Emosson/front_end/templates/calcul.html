@@ -13,7 +13,7 @@
 <div class="container">
     
     <div id="zone-pdf">
-        <!-- HEADER : nom + score -->
+        <!-- Nom et score dans le header -->
         <div class="pdf-header-wrapper">
             <div class="header-bilan">
                 <h1>Bilan de vulnérabilité inondation</h1>
@@ -36,7 +36,7 @@
         <div class="pdf-section no-break">
             <h2 class="section-title carte-titre">Carte de l'aléa inondation</h2>
 
-            <!-- bandeau vert/jaune/orange/rouge selon zone -->
+            <!-- bandeau vert/jaune/orange/rouge selon la zone -->
             {% if not dans_zich %}
             <div class="alerte-barre alerte-vert">
                 <div class="alerte-titre-principal">HORS ZONE INONDABLE</div>
@@ -54,7 +54,7 @@
             <div id="map" class="map-pdf-container"></div>
         </div>
 
-        <!-- RECOMMANDATIONS groupées par catégorie -->
+        <!-- recommandations groupées par catégorie -->
         <div class="pdf-section">
             <h2 class="section-title">Recommandations</h2>
             
@@ -85,7 +85,7 @@
             {% endif %}
         </div>
 
-        <!-- TABLEAU récap questions / réponses / recomendation -->
+        <!-- tableau récap questions / réponses / recomendation -->
         <div class="pdf-section">
             <h2 class="section-title">Rappel de vos réponses</h2>
             <table class="rappel-table">
@@ -123,7 +123,7 @@
     <script src="../static/JS/js_calcul_carte.js"></script>
     
     <script>
-        // Fonction d'export PDF
+        // fonction d'export PDF
         document.getElementById('btn-telecharger').addEventListener('click', function () {
             var element = document.getElementById('zone-pdf');
             
@@ -137,7 +137,7 @@
                   scrollY: 0 // Corrige le bug de la page blanche au début si on a scrollé
               }, 
               jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-              pagebreak:    { mode: ['css', 'avoid-all'] } // Gère les sauts de page proprement
+              pagebreak:    { mode: ['css', 'avoid-all'] } // Gère les sauts de page 
             };
 
             html2pdf().set(opt).from(element).save().then(function() {
@@ -147,7 +147,7 @@
     </script>
     <script>
         // Initialisation de la carte Leaflet
-        // L'objet geom est passé depuis Flask en JSON sécurisé
+        // l'objet geom est passé depuis Flask en JSON 
         initMap({{ lat | tojson }}, {{ lon | tojson }}, {{ geom | safe }});
     </script>
 </body>

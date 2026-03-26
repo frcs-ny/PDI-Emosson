@@ -134,10 +134,8 @@
         //MISE à jour de L'UI
         function updateUI() {
             let compteur = 0;
-            let currentActiveIndex = 0;
-            let last_index_active = -1;
-
-            
+            let derniere_etape_visible = -1;
+        
             critere.forEach(function(step, i) {
                 const input = step.querySelector('.etape_i');
                 const isActive = isStepActive(i);
@@ -151,7 +149,7 @@
                     compteur+=1;
                     input.setAttribute('required', 'required');
                     step.style.display = ''; 
-                    last_index_active = i;
+                    derniere_etape_visible = i;
 
                     if (i === critere_i) {
                         step.classList.remove('locked');
@@ -164,7 +162,7 @@
                 }
             });
 
-            //barre de progresssion
+            //mise à jour de la barre de progresssion
             let progressPct = 0;
             if (compteur > 1) {
                 progressPct = ((indice_i - 1) / (compteur - 1)) * 100;
@@ -177,7 +175,7 @@
             bouton_precedent.style.display = (indice_i <= 1) ? 'none' : 'inline-block';
 
             //afficher le bouton calculer à la fin
-            if (critere_i === last_index_active) {
+            if (critere_i === derniere_etape_visible) {
                 bouton_suivant.style.display = 'none';
                 bouton_valider.style.display = 'inline-block';
             } else {
@@ -187,7 +185,7 @@
 
             checkValidity();
         }
-
+        
         function checkValidity() {
             const currentInput = critere[critere_i].querySelector('.etape_i');
             const isValid = currentInput.checkValidity() && currentInput.value.trim() !== '';
@@ -195,21 +193,21 @@
             bouton_suivant.disabled = !isValid;
 
             
-            let last_index_active = -1;
+            let derniere_etape_visible = -1;
             for (let i = nb_criteres - 1; i >= 0; i-=1) {
                 if (isStepActive(i)) {
-                    last_index_active = i;
+                    derniere_etape_visible = i;
                     break;
                 }
             }
 
-            if (critere_i === last_index_active) {
+            if (critere_i === derniere_etape_visible) {
                 bouton_valider.disabled = !isValid;
             }
         }
 
-        
-        function goNext() {
+        //bouton suivant
+        function fonction_btn_suivant() {
             let nextIndex = critere_i + 1;
            
             while (nextIndex < nb_criteres && !isStepActive(nextIndex)) {
@@ -225,13 +223,13 @@
         }
 
         //bouton précédent
-        function goPrev() {
+        function fonction_btn_prec() {
             let prevIndex = critere_i - 1;
             while (prevIndex >= 0 && !isStepActive(prevIndex)) {
                 prevIndex--;
             }
             if (prevIndex >= 0) {
-                critere_i = prevIndex;
+                critere_i = prevIndex; 
                 updateUI();
             }
         }
@@ -248,12 +246,12 @@
                 if (isSelect && input.checkValidity()) {
                     setTimeout(function() {
                         
-                        let last_index_active = -1;
+                        let derniere_etape_visible = -1;
                         for (let i = nb_criteres - 1; i >= 0; i-=1) {
-                            if (isStepActive(i)) { last_index_active = i; break; }
+                            if (isStepActive(i)) { derniere_etape_visible = i; break; }
                         }
-                        if (critere_i < last_index_active) {
-                            goNext();
+                        if (critere_i < derniere_etape_visible) {
+                            fonction_btn_suivant();
                         }
                     }, 300); 
                 }
@@ -262,22 +260,22 @@
             input.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    let last_index_active = -1;
+                    let derniere_etape_visible = -1;
                     for (let i = nb_criteres - 1; i >= 0; i-=1) {
-                        if (isStepActive(i)) { last_index_active = i; break; }
+                        if (isStepActive(i)) { derniere_etape_visible = i; break; }
                     }
 
-                    if (!bouton_suivant.disabled && critere_i < last_index_active) {
-                        goNext();
-                    } else if (critere_i === last_index_active && !bouton_valider.disabled) {
+                    if (!bouton_suivant.disabled && critere_i < derniere_etape_visible) {
+                        fonction_btn_suivant();
+                    } else if (critere_i === derniere_etape_visible && !bouton_valider.disabled) {
                         form.submit();
                     }
                 }
             });
         });
 
-        bouton_suivant.addEventListener('click', goNext);
-        bouton_precedent.addEventListener('click', goPrev);
+        bouton_suivant.addEventListener('click', fonction_btn_suivant);
+        bouton_precedent.addEventListener('click', fonction_btn_prec);
 
         //Afficher
         updateUI();
